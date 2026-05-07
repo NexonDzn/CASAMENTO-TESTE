@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Confirmação de Presença</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,
+body{
+    overflow-x:hidden;
+}
+
+body{
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:25px 14px;
+
+    font-family:'Cormorant Garamond', serif;
+
+    background:
+    radial-gradient(circle at top left,
+    rgba(180,190,160,0.13),
+    transparent 30%),
+
+    radial-gradient(circle at bottom right,
+    rgba(180,190,160,0.13),
+    transparent 30%),
+
+    linear-gradient(
+        135deg,
+        #f7f5f0,
+        #f3f0ea
+    );
+}
+
+/* ===============================
+CARD
+=============================== */
+
+.card{
+
+    width:100%;
+    max-width:640px;
+
+    position:relative;
+
+    padding:58px 42px;
+
+    border-radius:34px;
+
+    overflow:hidden;
+
+    background:rgba(255,255,255,0.97);
+
+    backdrop-filter:blur(4px);
+
+    box-shadow:
+    0 18px 45px rgba(0,0,0,0.05),
+    inset 0 0 0 1px rgba(170,180,150,0.10);
+}
+
+/* ===============================
+FLORES
+=============================== */
+
+.floral{
+
+    position:absolute;
+
+    pointer-events:none;
+
+    opacity:0.95;
+
+    z-index:1;
+}
+
+.floral img{
+
+    width:100%;
+    display:block;
+}
+
+/* TROQUE PELAS SUAS IMAGENS */
+
+.floral-top{
+
+    width:250px;
+
+    top:-35px;
+    left:-45px;
+}
+
+.floral-bottom{
+
+    width:320px;
+
+    bottom:-90px;
+    right:-85px;
+
+    transform:rotate(180deg);
+}
+
+/* ===============================
+CONTEÚDO
+=============================== */
+
+.content{
+
+    position:relative;
+    z-index:2;
+
+    text-align:center;
+}
+
+/* SUBTITLE */
+
+.subtitle{
+
+    font-size:0.9rem;
+
+    letter-spacing:6px;
+
+    color:#7f8a71;
+
+    text-transform:uppercase;
+
+    margin-bottom:18px;
+}
+
+/* DIVISOR */
+
+.divider,
+.mini-divider{
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:10px;
+}
+
+.divider{
+
+    margin-bottom:22px;
+}
+
+.mini-divider{
+
+    margin:28px 0;
+}
+
+.divider::before,
+.divider::after,
+.mini-divider::before,
+.mini-divider::after{
+
+    content:"";
+
+    width:75px;
+    height:1px;
+
+    background:#d8c799;
+}
+
+.divider i,
+.mini-divider i{
+
+    font-size:10px;
+
+    color:#d8c799;
+}
+
+/* NOMES */
+
+.names{
+
+    line-height:1;
+
+    margin-bottom:18px;
+}
+
+.main-name{
+
+    font-family:'Great Vibes', cursive;
+
+    font-size:5.8rem;
+
+    font-weight:400;
+
+    color:#6f7d61;
+}
+
+.amp{
+
+    display:block;
+
+    margin:8px 0;
+
+    font-size:3rem;
+
+    color:#d2b778;
+}
+
+/* TEXTO */
+
+.message{
+
+    font-size:1.7rem;
+
+    color:#6f7d61;
+
+    line-height:1.3;
+}
+
+/* ===============================
+INFO
+=============================== */
+
+.info-box{
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    margin:42px 0;
+
+    border-top:1px solid #e0d5b5;
+    border-bottom:1px solid #e0d5b5;
+
+    padding:12px 0;
+}
+
+.info-item{
+
+    padding:35px 18px;
+
+    position:relative;
+
+    min-height:165px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+.info-item:not(:last-child)::after{
+
+    content:"";
+
+    position:absolute;
+
+    top:22px;
+    right:0;
+
+    width:1px;
+    height:calc(100% - 44px);
+
+    background:#e0d5b5;
+}
+
+.info-item i{
+
+    font-size:1.6rem;
+
+    margin-bottom:14px;
+
+    color:#71815d;
+}
+
+/* DIA */
+
+.day-text{
+
+    font-size:2.1rem !important;
+
+    letter-spacing:3px !important;
+
+    font-weight:700;
+}
+
+/* HORÁRIO */
+
+.hour-text{
+
+    font-size:2.2rem !important;
+
+    letter-spacing:2px !important;
+
+    font-weight:700;
+}
+
+/* DATA */
+
+.info-item h3{
+
+    font-size:6.3rem;
+
+    line-height:0.9;
+
+    font-weight:700;
+
+    color:#687659;
+
+    margin-bottom:10px;
+}
+
+.info-item p{
+
+    font-size:1.8rem;
+
+    letter-spacing:3px;
+
+    color:#71815d;
+
+    margin-top:6px;
+}
+
+.central-date{
+
+    padding-top:34px;
+    padding-bottom:34px;
+}
+
+/* ===============================
+FORM
+=============================== */
+
+.confirm-form{
+
+    display:flex;
+    flex-direction:column;
+
+    gap:14px;
+}
+
+/* GRID DOS INPUTS */
+
+.input-row{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:12px;
+}
+
+/* INPUT */
+
+.input-group{
+
+    position:relative;
+}
+
+.input-group i{
+
+    position:absolute;
+
+    top:50%;
+    left:20px;
+
+    transform:translateY(-50%);
+
+    color:#7a876a;
+
+    font-size:1rem;
+}
+
+.input-group input{
+
+    width:100%;
+    height:62px;
+
+    border-radius:999px;
+
+    border:1.5px solid #a9b699;
+
+    background:rgba(255,255,255,0.85);
+
+    outline:none;
+
+    padding:0 20px 0 50px;
+
+    font-size:1.15rem;
+
+    color:#5f6f50;
+
+    transition:0.3s ease;
+
+    font-family:'Cormorant Garamond', serif;
+}
+
+.input-group input:focus{
+
+    border-color:#71815d;
+
+    box-shadow:
+    0 0 0 4px rgba(111,125,93,0.08);
+}
+
+/* ERRO */
+
+.error-message{
+
+    display:none;
+
+    text-align:left;
+
+    margin-top:8px;
+
+    padding-left:10px;
+
+    font-size:1rem;
+
+    color:#b45b5b;
+
+    font-weight:600;
+}
+
+/* INPUT ERROR */
+
+.input-error{
+
+    border-color:#c56d6d !important;
+
+    box-shadow:
+    0 0 0 4px rgba(197,109,109,0.08) !important;
+}
+
+/* BOTÕES */
+
+.confirm-button,
+.map-button{
+
+    width:100%;
+    height:64px;
+
+    border:none;
+
+    border-radius:999px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:12px;
+
+    text-decoration:none;
+
+    cursor:pointer;
+
+    font-size:1.25rem;
+
+    font-family:'Cormorant Garamond', serif;
+
+    transition:0.3s ease;
+}
+
+/* WHATSAPP */
+
+.confirm-button{
+
+    color:white;
+
+    background:
+    linear-gradient(
+        135deg,
+        #92a07c,
+        #71815d
+    );
+
+    box-shadow:
+    0 10px 22px rgba(111,125,93,0.18);
+}
+
+.confirm-button:hover{
+
+    transform:translateY(-2px);
+}
+
+/* MAPA */
+
+.map-button{
+
+    color:#6f7d61;
+
+    background:#f8f5ef;
+
+    border:1px solid #d9ccaa;
+}
+
+.map-button:hover{
+
+    background:#f3eee4;
+}
+
+/* ===============================
+LOCAL
+=============================== */
+
+.location{
+
+    margin-top:10px;
+
+    color:#71815d;
+}
+
+.location i{
+
+    font-size:1.5rem;
+
+    margin-bottom:10px;
+}
+
+.location p{
+
+    font-size:1.45rem;
+
+    line-height:1.5;
+}
+
+/* ===============================
+RESPONSIVO
+=============================== */
+
+@media(max-width:768px){
+
+    body{
+        padding:18px 12px;
+    }
+
+    .card{
+
+        padding:42px 22px;
+
+        border-radius:28px;
+    }
+
+    .main-name{
+
+        font-size:4.4rem;
+    }
+
+    .amp{
+
+        font-size:2.5rem;
+    }
+
+    .message{
+
+        font-size:1.35rem;
+    }
+
+    .info-box{
+
+        grid-template-columns:1fr;
+    }
+
+    .info-item{
+
+        border-bottom:1px solid #e0d5b5;
+    }
+
+    .info-item:last-child{
+
+        border-bottom:none;
+    }
+
+    .info-item:not(:last-child)::after{
+
+        display:none;
+    }
+
+    .info-item h3{
+
+        font-size:4.8rem;
+    }
+
+    .day-text{
+
+        font-size:1.7rem !important;
+    }
+
+    .hour-text{
+
+        font-size:1.8rem !important;
+    }
+
+    .location p{
+
+        font-size:1.2rem;
+    }
+
+    .confirm-button,
+    .map-button{
+
+        font-size:1.1rem;
+    }
+
+    .input-row{
+
+        grid-template-columns:1fr;
+    }
+
+    .floral-top{
+
+        width:180px;
+
+        top:-15px;
+        left:-35px;
+    }
+
+    .floral-bottom{
+
+        width:220px;
+
+        bottom:-45px;
+        right:-55px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <!-- ==========================
+    TROQUE PELAS SUAS IMAGENS
+    =========================== -->
+
+    <div class="floral floral-top">
+
+        <!-- EXEMPLO:
+        src="flores-top.png"
+        -->
+
+        <img src="flores-top.png">
+
+    </div>
+
+    <div class="floral floral-bottom">
+
+        <!-- EXEMPLO:
+        src="flores-bottom.png"
+        -->
+
+        <img src="flores-bottom.png">
+
+    </div>
+
+    <div class="content">
+
+        <!-- ALTERE AQUI -->
+
+        <div class="subtitle">
+            CASAMENTO
+        </div>
+
+        <div class="divider">
+            <i class="fa-solid fa-diamond"></i>
+        </div>
+
+        <div class="names">
+
+            <div class="main-name">
+                Joselis
+            </div>
+
+            <span class="amp">&</span>
+
+            <div class="main-name">
+                Tália
+            </div>
+
+        </div>
+
+        <div class="message">
+            Venha celebrar conosco este dia especial
+        </div>
+
+        <div class="mini-divider">
+            <i class="fa-solid fa-diamond"></i>
+        </div>
+
+        <!-- INFO -->
+
+        <div class="info-box">
+
+            <!-- DIA -->
+
+            <div class="info-item">
+
+                <i class="fa-regular fa-calendar"></i>
+
+                <p class="day-text">
+                    SÁBADO
+                </p>
+
+            </div>
+
+            <!-- DATA -->
+
+            <div class="info-item central-date">
+
+                <h3>31</h3>
+
+                <p>OUTUBRO 2026</p>
+
+            </div>
+
+            <!-- HORÁRIO -->
+
+            <div class="info-item">
+
+                <i class="fa-regular fa-clock"></i>
+
+                <p class="hour-text">
+                    18:00
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- FORM -->
+
+        <form class="confirm-form" id="confirmForm">
+
+            <!-- NOME E SOBRENOME -->
+
+            <div class="input-row">
+
+                <!-- NOME -->
+
+                <div>
+
+                    <div class="input-group">
+
+                        <i class="fa-regular fa-user"></i>
+
+                        <input
+                        type="text"
+                        id="firstName"
+                        placeholder="Digite seu nome">
+
+                    </div>
+
+                    <div class="error-message" id="firstNameError">
+                        Digite seu nome.
+                    </div>
+
+                </div>
+
+                <!-- SOBRENOME -->
+
+                <div>
+
+                    <div class="input-group">
+
+                        <i class="fa-regular fa-user"></i>
+
+                        <input
+                        type="text"
+                        id="lastName"
+                        placeholder="Digite seu sobrenome">
+
+                    </div>
+
+                    <div class="error-message" id="lastNameError">
+                        Digite seu sobrenome.
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- BOTÃO CONFIRMAR -->
+
+            <button type="submit" class="confirm-button">
+
+                <i class="fa-brands fa-whatsapp"></i>
+
+                Confirmar Presença
+
+            </button>
+
+            <!-- BOTÃO MAPA -->
+
+            <a
+            href="https://maps.app.goo.gl/Xxs1i8QyqXPdXGcFA"
+            target="_blank"
+            class="map-button">
+
+                <i class="fa-solid fa-location-dot"></i>
+
+                Ver Endereço
+
+            </a>
+
+        </form>
+
+        <div class="mini-divider">
+            <i class="fa-solid fa-diamond"></i>
+        </div>
+
+        <!-- LOCAL -->
+
+        <div class="location">
+
+            <i class="fa-solid fa-location-dot"></i>
+
+            <p>
+                Av. Kakogawa, 1095 -<br>
+                Jardim Vitória, Maringá - PR, CEP: 87023-729
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const whatsappNumber = '554396728578';
+
+const form = document.getElementById('confirmForm');
+
+const firstNameInput = document.getElementById('firstName');
+const lastNameInput = document.getElementById('lastName');
+
+const firstNameError = document.getElementById('firstNameError');
+const lastNameError = document.getElementById('lastNameError');
+
+function showError(input, errorElement){
+
+    input.classList.add('input-error');
+
+    errorElement.style.display = 'block';
+}
+
+function removeError(input, errorElement){
+
+    input.classList.remove('input-error');
+
+    errorElement.style.display = 'none';
+}
+
+firstNameInput.addEventListener('input', () => {
+
+    if(firstNameInput.value.trim().length > 1){
+
+        removeError(firstNameInput, firstNameError);
+    }
+});
+
+lastNameInput.addEventListener('input', () => {
+
+    if(lastNameInput.value.trim().length > 1){
+
+        removeError(lastNameInput, lastNameError);
+    }
+});
+
+form.addEventListener('submit', function(event){
+
+    event.preventDefault();
+
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+
+    let hasError = false;
+
+    // VALIDA NOME
+
+    if(firstName.length < 2){
+
+        showError(firstNameInput, firstNameError);
+
+        hasError = true;
+
+    }else{
+
+        removeError(firstNameInput, firstNameError);
+    }
+
+    // VALIDA SOBRENOME
+
+    if(lastName.length < 2){
+
+        showError(lastNameInput, lastNameError);
+
+        hasError = true;
+
+    }else{
+
+        removeError(lastNameInput, lastNameError);
+    }
+
+    // SE TIVER ERRO PARA
+
+    if(hasError){
+
+        return;
+    }
+
+    // NOME COMPLETO
+
+    const fullName = `${firstName} ${lastName}`;
+
+    // MENSAGEM WHATSAPP
+
+    const message =
+`Olá! Meu nome é ${fullName} e estou confirmando presença no casamento 💍`;
+
+    // LINK WHATSAPP
+
+    const url =
+`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(url, '_blank');
+
+});
+
+</script>
+
+</body>
+</html>
