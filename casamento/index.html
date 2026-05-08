@@ -308,6 +308,22 @@
         .toast { position: fixed; bottom: 30px; right: 30px; background: #5f6f50; color: white; padding: 14px 24px; border-radius: 999px; z-index: 1000; opacity: 0; transform: translateY(20px); transition: 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; transform: translateY(0); }
 
+        .status-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #71815d;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: normal;
+            letter-spacing: 1px;
+            z-index: 100;
+            font-family: monospace;
+            opacity: 0.8;
+        }
+
         @media (max-width: 700px) {
             .card { padding: 24px 20px; }
             .stats-row { grid-template-columns: 1fr 1fr; }
@@ -323,7 +339,7 @@
                 <div class="icon-circle"><i class="fa-solid fa-leaf"></i></div>
                 <div><h1>Painel Admin</h1><p class="subtitle">gestão de convidados & presentes</p></div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                 <span class="divider-dot"></span>
                 <span style="font-family:'Great Vibes',cursive;font-size:2rem;color:#6f7d61;">Joselis & Talia</span>
                 <span class="divider-dot"></span>
@@ -395,6 +411,7 @@
     </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="status-badge" id="syncStatus">🔄 Sincronizando...</div>
 
 <script>
     // ==================== FUNÇÃO DE ESCAPE GLOBAL ====================
@@ -406,6 +423,151 @@
             if (m === '>') return '&gt;';
             return m;
         });
+    }
+
+    // ==================== CONFIGURAÇÃO DO GITHUB GIST ====================
+    const GIST_ID = '587d4828137c2547940d03c72523951b';
+    const GITHUB_TOKEN = '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';
+    const GIST_API_URL = `https://api.github.com/gists/${GIST_ID}`;
+
+    // Controle para evitar loops de sincronização
+    let isSyncing = false;
+    let lastSyncHash = '';
+
+    // Função para calcular hash simples dos dados (para evitar sincronização desnecessária)
+    async function getCurrentDataHash() {
+        const gifts = await getAllGifts();
+        const data = {
+            guests: guests,
+            gifts: gifts.map(g => ({ name: g.name, imageDataUrl: g.imageDataUrl, createdAt: g.createdAt }))
+        };
+        const str = JSON.stringify(data);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash.toString();
+    }
+
+    async function loadDataFromGist() {
+        try {
+            const response = await fetch(GIST_API_URL, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const gist = await response.json();
+            const content = gist.files['wedding-data.json']?.content;
+            if (!content) throw new Error('Arquivo wedding-data.json não encontrado no Gist');
+            return JSON.parse(content);
+        } catch (error) {
+            console.error('Erro ao carregar do Gist:', error);
+            return null;
+        }
+    }
+
+    async function saveDataToGist(data, silent = false) {
+        if (isSyncing) return false;
+        isSyncing = true;
+        const content = JSON.stringify(data, null, 2);
+        const body = {
+            files: {
+                'wedding-data.json': { content: content }
+            }
+        };
+        try {
+            const response = await fetch(GIST_API_URL, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (response.ok) {
+                if (!silent) showToast('✅ Dados salvos automaticamente');
+                document.getElementById('syncStatus').innerHTML = '✅ Sincronizado';
+                setTimeout(() => {
+                    if (document.getElementById('syncStatus').innerHTML === '✅ Sincronizado')
+                        document.getElementById('syncStatus').innerHTML = '☁️ Nuvem ativa';
+                }, 2000);
+                return true;
+            } else {
+                if (!silent) showToast('❌ Erro ao salvar no GitHub');
+                document.getElementById('syncStatus').innerHTML = '⚠️ Erro na sincronização';
+                return false;
+            }
+        } catch (error) {
+            console.error(error);
+            if (!silent) showToast('❌ Erro de rede ao salvar');
+            return false;
+        } finally {
+            isSyncing = false;
+        }
+    }
+
+    // Sincronização automática (envia alterações locais para o Gist)
+    async function syncLocalToGist() {
+        if (isSyncing) return;
+        const gifts = await getAllGifts();
+        const currentHash = await getCurrentDataHash();
+        if (currentHash === lastSyncHash) return; // nada mudou
+        lastSyncHash = currentHash;
+        const dataToSave = {
+            guests: guests,
+            gifts: gifts.map(g => ({ name: g.name, imageDataUrl: g.imageDataUrl, createdAt: g.createdAt }))
+        };
+        await saveDataToGist(dataToSave, false);
+    }
+
+    // Carregar dados do Gist e atualizar local (com merge simples, substituindo tudo)
+    async function loadFromGistAndUpdate() {
+        if (isSyncing) return;
+        isSyncing = true;
+        const data = await loadDataFromGist();
+        if (!data) {
+            isSyncing = false;
+            return;
+        }
+        try {
+            let changed = false;
+            // Atualizar convidados
+            if (data.guests && Array.isArray(data.guests)) {
+                const newGuests = data.guests;
+                if (JSON.stringify(guests) !== JSON.stringify(newGuests)) {
+                    guests = newGuests;
+                    saveGuestsToLocal(guests);
+                    renderTableConvidados();
+                    changed = true;
+                }
+            }
+            // Atualizar presentes (substituir IndexedDB)
+            if (data.gifts && Array.isArray(data.gifts)) {
+                const currentGifts = await getAllGifts();
+                const currentGiftsSimple = currentGifts.map(g => ({ name: g.name, imageDataUrl: g.imageDataUrl }));
+                const newGiftsSimple = data.gifts.map(g => ({ name: g.name, imageDataUrl: g.imageDataUrl }));
+                if (JSON.stringify(currentGiftsSimple) !== JSON.stringify(newGiftsSimple)) {
+                    await clearAllGiftsFromDB();
+                    for (const gift of data.gifts) {
+                        await addGiftToDB({
+                            name: gift.name,
+                            imageDataUrl: gift.imageDataUrl,
+                            createdAt: gift.createdAt || Date.now()
+                        });
+                    }
+                    await renderGifts();
+                    changed = true;
+                }
+            }
+            if (changed) {
+                showToast('🔄 Dados sincronizados da nuvem');
+                lastSyncHash = await getCurrentDataHash();
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            isSyncing = false;
+        }
     }
 
     // ==================== INDEXEDDB PARA PRESENTES ====================
@@ -460,6 +622,17 @@
         });
     }
 
+    async function clearAllGiftsFromDB() {
+        if (!db) await openIndexedDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.clear();
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async function renderGifts() {
         const container = document.getElementById('giftsListContainer');
         if (!container) return;
@@ -487,6 +660,7 @@
                         await deleteGiftFromDB(id);
                         showToast('Presente removido');
                         await renderGifts();
+                        await syncLocalToGist(); // auto sync
                     }
                 });
             });
@@ -536,6 +710,7 @@
             previewContainer.innerHTML = '<i class="fa-regular fa-image" style="color:#b9b28a; font-size: 2rem;"></i>';
             fotoInput.value = '';
             await renderGifts();
+            await syncLocalToGist(); // auto sync
         } catch (err) {
             console.error(err);
             showToast('Erro ao salvar presente.');
@@ -543,7 +718,7 @@
     }
     btnSalvar.addEventListener('click', salvarPresente);
 
-    // ==================== CONVIDADOS (LOCALSTORAGE) ====================
+    // ==================== CONVIDADOS (LOCALSTORAGE como cache) ====================
     const STORAGE_KEY = 'casamento_guests_admin';
     function getDefaultGuests() {
         return [
@@ -556,17 +731,16 @@
         ];
     }
 
-    function loadGuests() {
+    function loadGuestsFromLocal() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             try { return JSON.parse(raw); }
             catch(e) { return getDefaultGuests(); }
         }
-        saveGuests(getDefaultGuests());
         return getDefaultGuests();
     }
 
-    function saveGuests(guests) {
+    function saveGuestsToLocal(guests) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
     }
 
@@ -574,7 +748,7 @@
         return guests.length ? Math.max(...guests.map(g => g.id)) + 1 : 1;
     }
 
-    let guests = loadGuests();
+    let guests = loadGuestsFromLocal();
     let currentFilter = 'todos';
     let searchTerm = '';
 
@@ -636,24 +810,26 @@
         updateStats();
     }
 
-    window._adminSetStatus = function(id, newStatus) {
+    window._adminSetStatus = async function(id, newStatus) {
         const guest = guests.find(g => g.id === id);
         if (!guest || guest.status === newStatus) return;
         guest.status = newStatus;
-        saveGuests(guests);
+        saveGuestsToLocal(guests);
         renderTableConvidados();
         const statusLabel = { pendente: 'Pendente', confirmada: 'Confirmada', cancelada: 'Cancelada' }[newStatus];
         showToast(`"${guest.name}" → ${statusLabel}`);
+        await syncLocalToGist(); // auto sync
     };
 
-    window._adminDeleteGuest = function(id) {
+    window._adminDeleteGuest = async function(id) {
         const guest = guests.find(g => g.id === id);
         if (!guest) return;
         if (confirm(`Remover "${guest.name}" da lista?`)) {
             guests = guests.filter(g => g.id !== id);
-            saveGuests(guests);
+            saveGuestsToLocal(guests);
             renderTableConvidados();
             showToast(`"${guest.name}" removido(a)`);
+            await syncLocalToGist(); // auto sync
         }
     };
 
@@ -665,10 +841,11 @@
             return;
         }
         guests.push({ id: generateId(guests), name: trimmed, status: 'pendente' });
-        saveGuests(guests);
+        saveGuestsToLocal(guests);
         renderTableConvidados();
         newNameInput.value = '';
         showToast(`"${trimmed}" adicionado(a)`);
+        syncLocalToGist(); // auto sync (não precisa await para não travar UI)
     }
 
     addForm.addEventListener('submit', e => {
@@ -690,7 +867,28 @@
         renderTableConvidados();
     });
 
-    renderTableConvidados();
+    // ==================== INICIALIZAÇÃO ====================
+    (async function init() {
+        await openIndexedDB();
+        // Primeiro, tenta carregar dados do Gist (se houver)
+        await loadFromGistAndUpdate();
+        // Sincroniza local com nuvem (caso tenha mudanças locais mais recentes)
+        await syncLocalToGist();
+        // Renderiza interfaces
+        renderTableConvidados();
+        if (document.getElementById('presentestab').classList.contains('active-tab')) {
+            await renderGifts();
+        } else {
+            // pré-carrega gifts para manter hash
+            await getAllGifts();
+        }
+        lastSyncHash = await getCurrentDataHash();
+        
+        // Polling a cada 30 segundos para buscar mudanças externas
+        setInterval(async () => {
+            await loadFromGistAndUpdate();
+        }, 30000);
+    })();
 
     // ==================== ABAS ====================
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -702,7 +900,7 @@
         tabBtns.forEach(btn => btn.classList.remove('active'));
         document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
         if (tabId === 'presentestab') {
-            renderGifts();  // recarrega os presentes sempre que a aba for aberta
+            renderGifts();
         }
     }
 
@@ -712,15 +910,6 @@
             switchTab(tabId);
         });
     });
-
-    // ==================== INICIALIZAÇÃO ====================
-    openIndexedDB().then(() => {
-        console.log('IndexedDB pronto');
-        // Se a aba ativa inicialmente for a de presentes, carrega; senão carrega sob demanda
-        if (document.getElementById('presentestab').classList.contains('active-tab')) {
-            renderGifts();
-        }
-    }).catch(err => console.warn('Erro IndexedDB', err));
 
     // Toast
     const toastEl = document.getElementById('toast');
