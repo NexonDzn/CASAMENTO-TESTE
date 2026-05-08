@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Confirmação de Presença • Joselis & Talia</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 15px;
+    font-family: 'Cormorant Garamond', serif;
+    background:
+        radial-gradient(circle at top left, rgba(180,190,160,0.15), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(180,190,160,0.15), transparent 28%),
+        linear-gradient(135deg, #f7f5f0, #f3f0ea);
+}
+
+/* CARD PRINCIPAL */
+.card {
+    width: 100%;
+    max-width: 680px;
+    position: relative;
+    padding: 60px 45px;
+    border-radius: 34px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(170,180,150,0.10);
+}
+
+/* ELEMENTOS FLORAIS (placeholder) */
+.floral {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.85;
+    z-index: 1;
+}
+.floral img {
+    width: 100%;
+    display: block;
+}
+.floral-top {
+    width: 250px;
+    top: -30px;
+    left: -40px;
+}
+.floral-bottom {
+    width: 300px;
+    bottom: -70px;
+    right: -70px;
+    transform: rotate(180deg);
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    letter-spacing: 6px;
+    color: #7f8a71;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+
+.divider, .mini-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.divider { margin-bottom: 22px; }
+.mini-divider { margin: 30px 0; }
+.divider::before, .divider::after,
+.mini-divider::before, .mini-divider::after {
+    content: "";
+    width: 75px;
+    height: 1px;
+    background: #d8c799;
+}
+.divider i, .mini-divider i {
+    font-size: 10px;
+    color: #d8c799;
+}
+
+.names { line-height: 1; margin-bottom: 20px; }
+.main-name {
+    font-family: 'Great Vibes', cursive;
+    font-size: 5.8rem;
+    font-weight: 400;
+    color: #6f7d61;
+}
+.amp {
+    display: block;
+    margin: 10px 0;
+    font-size: 3rem;
+    color: #d2b778;
+}
+.message {
+    font-size: 1.7rem;
+    color: #6f7d61;
+    line-height: 1.3;
+}
+
+/* INFORMAÇÕES DATA/HORA */
+.info-box {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    margin: 45px 0;
+    border-top: 1px solid #e0d5b5;
+    border-bottom: 1px solid #e0d5b5;
+    padding: 10px 0;
+}
+.info-item {
+    padding: 35px 18px;
+    position: relative;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.info-item:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 20px;
+    right: 0;
+    width: 1px;
+    height: calc(100% - 40px);
+    background: #e0d5b5;
+}
+.info-item i { font-size: 1.6rem; margin-bottom: 14px; color: #71815d; }
+.day-text { font-size: 1.5rem !important; letter-spacing: 3px !important; font-weight: 600; }
+.hour-text { font-size: 1.7rem !important; letter-spacing: 2px !important; font-weight: 600; }
+.info-item h3 {
+    font-size: 6rem;
+    line-height: 1;
+    font-weight: 700;
+    color: #687659;
+    margin-bottom: 10px;
+}
+.info-item p {
+    font-size: 2rem;
+    letter-spacing: 2px;
+    color: #71815d;
+    margin-top: 6px;
+}
+
+/* FORM E BOTÕES */
+.confirm-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.input-group {
+    position: relative;
+}
+.input-group i {
+    position: absolute;
+    top: 50%;
+    left: 22px;
+    transform: translateY(-50%);
+    color: #7a876a;
+    font-size: 1rem;
+}
+.input-group input {
+    width: 100%;
+    height: 62px;
+    border-radius: 999px;
+    border: 1.5px solid #a9b699;
+    background: rgba(255,255,255,0.8);
+    outline: none;
+    padding: 0 22px 0 55px;
+    font-size: 1.2rem;
+    color: #5f6f50;
+    transition: 0.3s ease;
+    font-family: 'Cormorant Garamond', serif;
+}
+.input-group input:focus {
+    border-color: #71815d;
+    box-shadow: 0 0 0 4px rgba(111,125,93,0.08);
+}
+
+.confirm-button, .map-button, .gifts-button {
+    width: 100%;
+    height: 64px;
+    border: none;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    font-family: 'Cormorant Garamond', serif;
+    transition: 0.3s ease;
+}
+.confirm-button {
+    color: white;
+    background: linear-gradient(135deg, #92a07c, #71815d);
+    box-shadow: 0 10px 22px rgba(111,125,93,0.18);
+}
+.confirm-button:hover { transform: translateY(-2px); }
+.map-button {
+    color: #6f7d61;
+    background: #f8f5ef;
+    border: 1px solid #d9ccaa;
+}
+.map-button:hover { background: #f3eee4; }
+
+/* Botão VER PRESENTES (estilo especial) */
+.gifts-button {
+    background: #fef7e8;
+    border: 1px solid #e2d1aa;
+    color: #6f7d61;
+    margin-top: 8px;
+}
+.gifts-button i { color: #c4ad72; }
+.gifts-button:hover { background: #fcf3e0; transform: translateY(-2px); }
+
+.location {
+    margin-top: 10px;
+    color: #71815d;
+}
+.location i { font-size: 1.5rem; margin-bottom: 10px; }
+.location p { font-size: 1.5rem; line-height: 1.5; }
+
+/* ========== MODAL DA LISTA DE PRESENTES ========== */
+.modal-gifts {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    font-family: 'Cormorant Garamond', serif;
+}
+.modal-container {
+    background: #fefcf7;
+    border-radius: 48px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px 28px 32px;
+    box-shadow: 0 30px 40px rgba(0,0,0,0.2);
+    border: 1px solid #e2d5b5;
+    position: relative;
+}
+.modal-container h2 {
+    font-family: 'Great Vibes', cursive;
+    font-size: 2.5rem;
+    color: #6f7d61;
+    text-align: center;
+    margin-bottom: 12px;
+}
+.modal-container .close-modal {
+    position: absolute;
+    top: 20px;
+    right: 28px;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #9cb08b;
+    transition: 0.2s;
+    background: none;
+    border: none;
+    font-weight: 300;
+}
+.modal-container .close-modal:hover { color: #5f6f50; transform: scale(1.1); }
+.gifts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 24px;
+    margin-top: 28px;
+}
+.gift-card {
+    background: #ffffffcc;
+    backdrop-filter: blur(8px);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+    transition: 0.2s;
+    border: 1px solid #e2d8c0;
+    text-align: center;
+}
+.gift-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+.gift-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    background: #e9e2d2;
+}
+.gift-info {
+    padding: 14px 12px 18px;
+}
+.gift-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #5f6f50;
+    margin-bottom: 6px;
+    font-family: 'Cormorant Garamond', serif;
+}
+.empty-gifts-modal {
+    text-align: center;
+    padding: 48px 20px;
+    color: #b0b8a2;
+    font-size: 1.4rem;
+}
+.empty-gifts-modal i { font-size: 3rem; margin-bottom: 16px; display: block; }
+
+/* LOADING */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #71815d;
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+    body { padding: 18px 12px; }
+    .card { padding: 42px 22px; border-radius: 28px; }
+    .main-name { font-size: 4.4rem; }
+    .amp { font-size: 2.5rem; }
+    .message { font-size: 1.35rem; }
+    .info-box { grid-template-columns: 1fr; }
+    .info-item { border-bottom: 1px solid #e0d5b5; }
+    .info-item:last-child { border-bottom: none; }
+    .info-item:not(:last-child)::after { display: none; }
+    .info-item h3 { font-size: 4.5rem; }
+    .day-text, .hour-text { font-size: 1.3rem !important; }
+    .location p { font-size: 1.2rem; }
+    .confirm-button, .map-button, .gifts-button { font-size: 1.1rem; }
+    .floral-top { width: 180px; top: -15px; left: -35px; }
+    .floral-bottom { width: 220px; bottom: -40px; right: -50px; }
+    .gifts-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <!-- Elementos florais ilustrativos (substitua pelos seus PNGs) -->
+    <div class="floral floral-top">
+        <img src="flores-top.png" alt="flores" onerror="this.style.display='none'">
+    </div>
+    <div class="floral floral-bottom">
+        <img src="flores-bottom.png" alt="flores" onerror="this.style.display='none'">
+    </div>
+
+    <div class="content">
+        <div class="subtitle">CASAMENTO</div>
+        <div class="divider"><i class="fa-solid fa-diamond"></i></div>
+        <div class="names">
+            <div class="main-name">Joselis</div>
+            <span class="amp">&</span>
+            <div class="main-name">Talia</div>
+        </div>
+        <div class="message">Venha celebrar conosco este dia especial</div>
+        <div class="mini-divider"><i class="fa-solid fa-diamond"></i></div>
+
+        <!-- INFO DATA/HORA -->
+        <div class="info-box">
+            <div class="info-item">
+                <i class="fa-regular fa-calendar"></i>
+                <p class="day-text">SÁBADO</p>
+            </div>
+            <div class="info-item central-date">
+                <h3>31</h3>
+                <p>OUTUBRO 2026</p>
+            </div>
+            <div class="info-item">
+                <i class="fa-regular fa-clock"></i>
+                <p class="hour-text">18:00</p>
+            </div>
+        </div>
+
+        <!-- FORM CONFIRMAÇÃO -->
+        <form class="confirm-form" id="confirmForm">
+            <div class="input-group">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="guestName" placeholder="Digite nome e sobrenome" required>
+            </div>
+            <button type="submit" class="confirm-button">
+                <i class="fa-brands fa-whatsapp"></i> Confirmar Presença
+            </button>
+            <a href="https://maps.app.goo.gl/Xxs1i8QyqXPdXGcFA" target="_blank" class="map-button">
+                <i class="fa-solid fa-location-dot"></i> Ver Endereço
+            </a>
+            <!-- NOVO BOTÃO: VER LISTA DE PRESENTES -->
+            <button type="button" id="openGiftsModalBtn" class="gifts-button">
+                <i class="fa-solid fa-gift"></i> Ver Lista de Presentes
+            </button>
+        </form>
+
+        <div class="mini-divider"><i class="fa-solid fa-diamond"></i></div>
+        <div class="location">
+            <i class="fa-solid fa-location-dot"></i>
+            <p>Av. Kakogawa, 1095 -<br>Jardim Vitória, Maringá - PR, CEP: 87023-729</p>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PARA EXIBIR PRESENTES (APENAS VISUALIZAÇÃO) -->
+<div id="giftsModal" class="modal-gifts">
+    <div class="modal-container">
+        <button class="close-modal" id="closeModalBtn">&times;</button>
+        <h2><i class="fa-solid fa-gift"></i> Lista de presentes</h2>
+        <div id="modalGiftsContent" class="gifts-grid">
+            <div class="loading-spinner"><i class="fa-regular fa-heart fa-pulse"></i> Carregando presentes...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ====================== INDEXEDDB : ACESSO AOS PRESENTES CADASTRADOS NO PAINEL ADMIN ======================
+    const DB_NAME = 'WeddingGiftsDB';
+    const STORE_NAME = 'gifts';
+    let db = null;
+
+    // Abrir / conectar ao IndexedDB (mesmo banco usado no painel admin)
+    function openIndexedDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                db = request.result;
+                resolve(db);
+            };
+            request.onupgradeneeded = (event) => {
+                const dbRef = event.target.result;
+                if (!dbRef.objectStoreNames.contains(STORE_NAME)) {
+                    dbRef.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                }
+            };
+        });
+    }
+
+    // Buscar todos os presentes (apenas leitura)
+    async function getAllGifts() {
+        if (!db) await openIndexedDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // Função para renderizar os presentes dentro do modal
+    async function renderGiftsIntoModal() {
+        const container = document.getElementById('modalGiftsContent');
+        if (!container) return;
+        try {
+            const gifts = await getAllGifts();
+            if (!gifts.length) {
+                container.innerHTML = `<div class="empty-gifts-modal">
+                    <i class="fa-regular fa-heart"></i>
+                    <p>💝 A lista de presentes será atualizada em breve.<br>Volte para conferir!</p>
+                </div>`;
+                return;
+            }
+            // Monta grid com foto e nome (sem botões de edição/exclusão - apenas visual)
+            container.innerHTML = gifts.map(gift => `
+                <div class="gift-card">
+                    <img class="gift-img" src="${gift.imageDataUrl}" alt="${escapeHTML(gift.name)}" onerror="this.src='https://placehold.co/300x300?text=Presente'">
+                    <div class="gift-info">
+                        <div class="gift-title">${escapeHTML(gift.name)}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Erro ao carregar presentes:', error);
+            container.innerHTML = `<div class="empty-gifts-modal"><i class="fa-regular fa-circle-exclamation"></i><p>Não foi possível carregar os presentes no momento.</p></div>`;
+        }
+    }
+
+    // Helper para escapar HTML
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // ====================== MODAL CONTROLE ======================
+    const modal = document.getElementById('giftsModal');
+    const openBtn = document.getElementById('openGiftsModalBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+
+    async function openModalAndLoadGifts() {
+        // Mostra o modal com loading
+        modal.style.display = 'flex';
+        const contentDiv = document.getElementById('modalGiftsContent');
+        if (contentDiv) {
+            contentDiv.innerHTML = `<div class="loading-spinner"><i class="fa-regular fa-heart fa-pulse"></i> Carregando presentes...</div>`;
+        }
+        // Carrega os presentes do IndexedDB
+        await renderGiftsIntoModal();
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    // Eventos do modal
+    openBtn.addEventListener('click', openModalAndLoadGifts);
+    closeBtn.addEventListener('click', closeModal);
+    // Fechar ao clicar fora do conteúdo
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // ====================== CONFIRMAÇÃO POR WHATSAPP (original, sem alterações) ======================
+    const whatsappNumber = '554396728578';  // Número do whatsapp (pode ajustar)
+    const form = document.getElementById('confirmForm');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const name = document.getElementById('guestName').value.trim();
+        const splitName = name.split(' ');
+        if (splitName.length < 2) {
+            alert('Por favor, digite nome e sobrenome completo.');
+            return;
+        }
+        const message = `Olá! Meu nome é ${name} e estou confirmando presença no seu casamento 💍`;
+        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    });
+
+    // Pré-carregar o IndexedDB para evitar delay na primeira abertura do modal
+    openIndexedDB().then(() => {
+        console.log('✅ IndexedDB pronto para exibir presentes');
+        // Opcional: já carrega os gifts em background para cache
+        getAllGifts().catch(e => console.warn);
+    }).catch(err => console.warn('⚠️ Erro ao abrir IndexedDB (pode ser privacidade)', err));
+
+    // Se as imagens das flores não existirem, não quebrar layout
+    document.querySelectorAll('.floral img').forEach(img => {
+        img.onerror = () => { img.style.display = 'none'; };
+    });
+</script>
+</body>
+</html>
