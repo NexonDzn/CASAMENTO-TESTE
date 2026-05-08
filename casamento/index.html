@@ -324,6 +324,17 @@
             opacity: 0.8;
         }
 
+        .btn-test {
+            background: #f0ede5;
+            border: 1px solid #d9ccaa;
+            border-radius: 40px;
+            padding: 6px 16px;
+            margin-left: 12px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
         @media (max-width: 700px) {
             .card { padding: 24px 20px; }
             .stats-row { grid-template-columns: 1fr 1fr; }
@@ -343,9 +354,8 @@
                 <span class="divider-dot"></span>
                 <span style="font-family:'Great Vibes',cursive;font-size:2rem;color:#6f7d61;">Joselis & Talia</span>
                 <span class="divider-dot"></span>
-                <a href="confirmação.html" class="btn-confirm-presenca">
-                    <i class="fa-regular fa-calendar-check"></i> Confirmar Presença
-                </a>
+                <a href="confirmação.html" class="btn-confirm-presenca"><i class="fa-regular fa-calendar-check"></i> Confirmar Presença</a>
+                <button id="testGistBtn" class="btn-test"><i class="fa-solid fa-vial"></i> Testar GitHub</button>
             </div>
         </div>
         <div class="tabs-container" style="margin-top: 28px;">
@@ -425,16 +435,15 @@
         });
     }
 
-    // ==================== CONFIGURAÇÃO DO GITHUB GIST ====================
-    const GIST_ID = '587d4828137c2547940d03c72523951b';
-    const GITHUB_TOKEN = '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';
-    const GIST_API_URL = `https://api.github.com/gists/${GIST_ID}`;
+    // ==================== CONFIGURAÇÃO DA API LOCAL ====================
+    // Agora chamamos nossa própria API route no Vercel, que usará a variável de ambiente
+    const API_URL = '/api/gist';
 
     // Controle para evitar loops de sincronização
     let isSyncing = false;
     let lastSyncHash = '';
 
-    // Função para calcular hash simples dos dados (para evitar sincronização desnecessária)
+    // Função para calcular hash simples dos dados
     async function getCurrentDataHash() {
         const gifts = await getAllGifts();
         const data = {
@@ -450,18 +459,32 @@
         return hash.toString();
     }
 
+    // Teste de conexão com o GitHub via nossa API
+    async function testGistConnection() {
+        showToast('🔍 Testando conexão com GitHub...');
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            console.log('Dados recebidos:', data);
+            showToast('✅ Conexão OK! Gist acessível.');
+        } catch (err) {
+            console.error('Erro no teste:', err);
+            showToast(`❌ Erro: ${err.message}. Verifique se a API route está configurada.`);
+        }
+    }
+
     async function loadDataFromGist() {
         try {
-            const response = await fetch(GIST_API_URL, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
+            console.log('Carregando dados via API...');
+            const response = await fetch(API_URL);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const gist = await response.json();
-            const content = gist.files['wedding-data.json']?.content;
-            if (!content) throw new Error('Arquivo wedding-data.json não encontrado no Gist');
-            return JSON.parse(content);
+            const data = await response.json();
+            console.log('Dados carregados:', data);
+            return data;
         } catch (error) {
-            console.error('Erro ao carregar do Gist:', error);
+            console.error('Erro ao carregar do Gist via API:', error);
+            showToast(`Erro ao carregar: ${error.message}`);
             return null;
         }
     }
@@ -469,21 +492,14 @@
     async function saveDataToGist(data, silent = false) {
         if (isSyncing) return false;
         isSyncing = true;
-        const content = JSON.stringify(data, null, 2);
-        const body = {
-            files: {
-                'wedding-data.json': { content: content }
-            }
-        };
         try {
-            const response = await fetch(GIST_API_URL, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
+            console.log('Salvando dados via API...');
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
+            console.log('Resposta da API:', response.status);
             if (response.ok) {
                 if (!silent) showToast('✅ Dados salvos automaticamente');
                 document.getElementById('syncStatus').innerHTML = '✅ Sincronizado';
@@ -493,25 +509,26 @@
                 }, 2000);
                 return true;
             } else {
-                if (!silent) showToast('❌ Erro ao salvar no GitHub');
+                const errorText = await response.text();
+                console.error('Erro da API:', errorText);
+                if (!silent) showToast(`❌ Erro ao salvar: ${response.status}`);
                 document.getElementById('syncStatus').innerHTML = '⚠️ Erro na sincronização';
                 return false;
             }
         } catch (error) {
-            console.error(error);
-            if (!silent) showToast('❌ Erro de rede ao salvar');
+            console.error('Erro de rede:', error);
+            if (!silent) showToast(`❌ Erro de rede: ${error.message}`);
             return false;
         } finally {
             isSyncing = false;
         }
     }
 
-    // Sincronização automática (envia alterações locais para o Gist)
     async function syncLocalToGist() {
         if (isSyncing) return;
         const gifts = await getAllGifts();
         const currentHash = await getCurrentDataHash();
-        if (currentHash === lastSyncHash) return; // nada mudou
+        if (currentHash === lastSyncHash) return;
         lastSyncHash = currentHash;
         const dataToSave = {
             guests: guests,
@@ -520,7 +537,6 @@
         await saveDataToGist(dataToSave, false);
     }
 
-    // Carregar dados do Gist e atualizar local (com merge simples, substituindo tudo)
     async function loadFromGistAndUpdate() {
         if (isSyncing) return;
         isSyncing = true;
@@ -531,17 +547,14 @@
         }
         try {
             let changed = false;
-            // Atualizar convidados
             if (data.guests && Array.isArray(data.guests)) {
-                const newGuests = data.guests;
-                if (JSON.stringify(guests) !== JSON.stringify(newGuests)) {
-                    guests = newGuests;
+                if (JSON.stringify(guests) !== JSON.stringify(data.guests)) {
+                    guests = data.guests;
                     saveGuestsToLocal(guests);
                     renderTableConvidados();
                     changed = true;
                 }
             }
-            // Atualizar presentes (substituir IndexedDB)
             if (data.gifts && Array.isArray(data.gifts)) {
                 const currentGifts = await getAllGifts();
                 const currentGiftsSimple = currentGifts.map(g => ({ name: g.name, imageDataUrl: g.imageDataUrl }));
@@ -660,7 +673,7 @@
                         await deleteGiftFromDB(id);
                         showToast('Presente removido');
                         await renderGifts();
-                        await syncLocalToGist(); // auto sync
+                        await syncLocalToGist();
                     }
                 });
             });
@@ -710,7 +723,7 @@
             previewContainer.innerHTML = '<i class="fa-regular fa-image" style="color:#b9b28a; font-size: 2rem;"></i>';
             fotoInput.value = '';
             await renderGifts();
-            await syncLocalToGist(); // auto sync
+            await syncLocalToGist();
         } catch (err) {
             console.error(err);
             showToast('Erro ao salvar presente.');
@@ -818,7 +831,7 @@
         renderTableConvidados();
         const statusLabel = { pendente: 'Pendente', confirmada: 'Confirmada', cancelada: 'Cancelada' }[newStatus];
         showToast(`"${guest.name}" → ${statusLabel}`);
-        await syncLocalToGist(); // auto sync
+        await syncLocalToGist();
     };
 
     window._adminDeleteGuest = async function(id) {
@@ -829,7 +842,7 @@
             saveGuestsToLocal(guests);
             renderTableConvidados();
             showToast(`"${guest.name}" removido(a)`);
-            await syncLocalToGist(); // auto sync
+            await syncLocalToGist();
         }
     };
 
@@ -845,7 +858,7 @@
         renderTableConvidados();
         newNameInput.value = '';
         showToast(`"${trimmed}" adicionado(a)`);
-        syncLocalToGist(); // auto sync (não precisa await para não travar UI)
+        syncLocalToGist();
     }
 
     addForm.addEventListener('submit', e => {
@@ -870,21 +883,16 @@
     // ==================== INICIALIZAÇÃO ====================
     (async function init() {
         await openIndexedDB();
-        // Primeiro, tenta carregar dados do Gist (se houver)
         await loadFromGistAndUpdate();
-        // Sincroniza local com nuvem (caso tenha mudanças locais mais recentes)
         await syncLocalToGist();
-        // Renderiza interfaces
         renderTableConvidados();
         if (document.getElementById('presentestab').classList.contains('active-tab')) {
             await renderGifts();
         } else {
-            // pré-carrega gifts para manter hash
             await getAllGifts();
         }
         lastSyncHash = await getCurrentDataHash();
         
-        // Polling a cada 30 segundos para buscar mudanças externas
         setInterval(async () => {
             await loadFromGistAndUpdate();
         }, 30000);
@@ -918,9 +926,12 @@
         clearTimeout(toastTimer);
         toastEl.textContent = msg;
         toastEl.classList.add('show');
-        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
     }
     window.showToast = showToast;
+
+    // Botão de teste
+    document.getElementById('testGistBtn').addEventListener('click', testGistConnection);
 </script>
 </body>
 </html>
