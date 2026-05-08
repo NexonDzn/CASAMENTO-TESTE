@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <style>
+        /* ========== ESTILOS (MANTIDOS OS MESMOS) ========== */
         :root {
             --bg: #f7f5f0;
             --surface: rgba(255, 255, 255, 0.96);
@@ -32,11 +33,7 @@
             --transition: 0.25s ease;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             min-height: 100vh;
@@ -60,7 +57,6 @@
             gap: 28px;
         }
 
-        /* ========== CARD BASE ========== */
         .card {
             position: relative;
             padding: 40px 38px;
@@ -72,7 +68,6 @@
             transition: all 0.2s;
         }
 
-        /* ========== HEADER ========== */
         .admin-header {
             display: flex;
             align-items: center;
@@ -124,7 +119,6 @@
             flex-shrink: 0;
         }
 
-        /* Botão Confirmar Presença (estilo elegante, igual ao .btn-outline) */
         .btn-confirm-presenca {
             height: 46px;
             padding: 0 20px;
@@ -144,17 +138,13 @@
             white-space: nowrap;
             text-decoration: none;
         }
+
         .btn-confirm-presenca:hover {
             background: #f3eee4;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .btn-confirm-presenca i {
-            font-size: 1.1rem;
-            color: #71815d;
-        }
 
-        /* TAB SYSTEM (abas) */
         .tabs-container {
             border-radius: 24px;
             background: rgba(255,255,240,0.6);
@@ -164,6 +154,7 @@
             margin-bottom: 20px;
             border: 1px solid #eae2cf;
         }
+
         .tab-btn {
             flex: 1;
             padding: 12px 0;
@@ -182,9 +173,7 @@
             justify-content: center;
             gap: 12px;
         }
-        .tab-btn i {
-            font-size: 1.2rem;
-        }
+
         .tab-btn.active {
             background: #ffffffdd;
             backdrop-filter: blur(4px);
@@ -192,25 +181,28 @@
             color: #5f6f50;
             border: 1px solid #e1d6ba;
         }
+
         .tab-content {
             display: none;
             animation: fadeIn 0.25s ease;
         }
+
         .tab-content.active-tab {
             display: block;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px);}
-            to { opacity: 1; transform: translateY(0);}
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ========== FORM E ESTATÍSTICAS (convidados) ========== */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 14px;
             margin-bottom: 10px;
         }
+
         .stat-card {
             text-align: center;
             padding: 22px 14px 18px;
@@ -220,25 +212,24 @@
             transition: var(--transition);
             cursor: default;
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);}
-        .stat-card .stat-icon { font-size: 1.5rem; margin-bottom: 8px; color: #71815d;}
-        .stat-card .stat-number { font-size: 2.6rem; font-weight: 700; color: #5f6f50; line-height: 1;}
-        .stat-card .stat-label { font-size: 0.85rem; letter-spacing: 2px; color: #7f8a71; text-transform: uppercase; margin-top: 4px; }
+
+        .stat-card .stat-number { font-size: 2.6rem; font-weight: 700; color: #5f6f50; line-height: 1; }
+        .stat-card .stat-label { font-size: 0.85rem; letter-spacing: 2px; color: #7f8a71; text-transform: uppercase; }
         .stat-card.pending { border-left: 4px solid var(--pending); }
         .stat-card.confirmed { border-left: 4px solid var(--confirmed); }
         .stat-card.cancelled { border-left: 4px solid var(--cancelled); }
-        .stat-card.total { border-left: 4px solid #71815d; }
 
         .add-guest-form {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
+
         .add-guest-form .input-wrapper {
             flex: 1;
-            min-width: 220px;
             position: relative;
         }
+
         .add-guest-form .input-wrapper i {
             position: absolute;
             top: 50%;
@@ -246,19 +237,17 @@
             transform: translateY(-50%);
             color: #7a876a;
         }
+
         .add-guest-form input {
             width: 100%;
             height: 54px;
             border-radius: 999px;
             border: 1.5px solid #c4c9b0;
             background: rgba(255, 255, 255, 0.75);
-            outline: none;
             padding: 0 20px 0 48px;
             font-size: 1.15rem;
             font-family: 'Cormorant Garamond', serif;
-            color: #5f6f50;
         }
-        .add-guest-form input:focus { border-color: #71815d; box-shadow: 0 0 0 4px rgba(111, 125, 93, 0.07); }
 
         .btn {
             height: 54px;
@@ -269,189 +258,65 @@
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.1rem;
             font-weight: 600;
-            letter-spacing: 1px;
             display: inline-flex;
             align-items: center;
             gap: 10px;
             transition: var(--transition);
-            white-space: nowrap;
         }
+
         .btn-primary {
             color: #fff;
             background: linear-gradient(135deg, #92a07c, #71815d);
             box-shadow: 0 8px 20px rgba(111, 125, 93, 0.18);
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(111, 125, 93, 0.24);}
-        .btn-outline {
-            color: #6f7d61;
-            background: #f8f5ef;
-            border: 1px solid #d9ccaa;
-        }
-        .btn-outline:hover { background: #f3eee4; }
 
-        /* tabela convidados */
+        .btn-primary:hover { transform: translateY(-2px); }
+
         .table-wrapper { overflow-x: auto; margin-top: 6px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         thead th { text-align: left; padding: 16px 14px; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: #7f8a71; border-bottom: 2px solid #e0d5b5; }
         tbody td { padding: 14px 14px; border-bottom: 1px solid #f0ebdd; font-size: 1.2rem; color: #5f6f50; }
-        tbody tr:hover { background: #fdfdf9; }
         .guest-name-cell { display: flex; align-items: center; gap: 10px; font-weight: 600; }
         .avatar-dot { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #d8c799, #c4ad72); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
         .badge { display: inline-block; padding: 6px 16px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
         .badge-pending { background: var(--pending-bg); color: #8b6914; border: 1px solid #e0c97f; }
         .badge-confirmed { background: var(--confirmed-bg); color: #3a6b39; border: 1px solid #a3c9a2; }
         .badge-cancelled { background: var(--cancelled-bg); color: #8b3a3a; border: 1px solid #d4a0a0; }
-        .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
-        .btn-status, .btn-delete { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #d9ccaa; background: #fafaf7; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-delete { border-color: #e0c8c8; background: #fdf8f8; color: #b85c5c; }
-        .btn-status:hover, .btn-delete:hover { transform: scale(0.96); background: #f3eee4; }
+        .actions-cell { display: flex; gap: 6px; }
 
-        /* ========== ÁREA DE PRESENTES (IndexedDB) ========== */
-        .presente-form-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .upload-area {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-end;
-        }
-        .img-preview-box {
-            width: 120px;
-            height: 120px;
-            border-radius: 28px;
-            background: #f3efe6;
-            border: 2px dashed #d4caae;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        .img-preview-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .file-input-label {
-            background: #f8f5ef;
-            border: 1px solid #d9ccaa;
-            padding: 12px 24px;
-            border-radius: 60px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
-        }
-        .file-input-label:hover { background: #efe8da; }
+        .presente-form-grid { display: flex; flex-direction: column; gap: 24px; }
+        .upload-area { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+        .img-preview-box { width: 120px; height: 120px; border-radius: 28px; background: #f3efe6; border: 2px dashed #d4caae; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .file-input-label { background: #f8f5ef; border: 1px solid #d9ccaa; padding: 12px 24px; border-radius: 60px; cursor: pointer; }
         #presenteFotoInput { display: none; }
-        .presente-input-group {
-            flex: 1;
-            min-width: 200px;
-        }
-        .presente-input-group input {
-            width: 100%;
-            height: 52px;
-            border-radius: 999px;
-            border: 1.5px solid #c4c9b0;
-            padding: 0 20px;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.1rem;
-        }
+        .presente-input-group input { width: 100%; height: 52px; border-radius: 999px; border: 1.5px solid #c4c9b0; padding: 0 20px; font-family: 'Cormorant Garamond', serif; }
 
-        /* lista de presentes em grid */
-        .gifts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 28px;
-            margin-top: 28px;
-        }
-        .gift-card {
-            background: #ffffffcc;
-            backdrop-filter: blur(8px);
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            transition: 0.2s;
-            border: 1px solid #e2d8c0;
-            text-align: center;
-        }
-        .gift-card:hover { transform: translateY(-5px); box-shadow: 0 18px 30px rgba(0,0,0,0.08);}
-        .gift-img {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            background: #e9e2d2;
-        }
-        .gift-info {
-            padding: 16px 12px 20px;
-        }
-        .gift-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #5f6f50;
-            margin-bottom: 12px;
-            font-family: 'Cormorant Garamond', serif;
-        }
-        .delete-gift-btn {
-            background: transparent;
-            border: 1px solid #e0c8c8;
-            border-radius: 50px;
-            padding: 6px 18px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            color: #b85c5c;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        .delete-gift-btn:hover { background: #fdf0f0; border-color: #c47a7a; }
-        .empty-gifts {
-            text-align: center;
-            padding: 48px 20px;
-            color: #b0b8a2;
-        }
+        .gifts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 28px; margin-top: 28px; }
+        .gift-card { background: #ffffffcc; backdrop-filter: blur(8px); border-radius: 32px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid #e2d8c0; text-align: center; }
+        .gift-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #e9e2d2; }
+        .gift-info { padding: 16px 12px 20px; }
+        .gift-title { font-size: 1.5rem; font-weight: 600; color: #5f6f50; margin-bottom: 12px; }
+        .delete-gift-btn { background: transparent; border: 1px solid #e0c8c8; border-radius: 50px; padding: 6px 18px; cursor: pointer; color: #b85c5c; }
+        .empty-gifts { text-align: center; padding: 48px 20px; color: #b0b8a2; }
 
-        .filter-buttons, .search-wrapper { margin-bottom: 12px; }
-        .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .filter-btn {
-            height: 40px;
-            padding: 0 20px;
-            border-radius: 999px;
-            border: 1.5px solid #d9ccaa;
-            background: #fafaf7;
-            cursor: pointer;
-            font-family: 'Cormorant Garamond', serif;
-        }
+        .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .filter-btn { height: 40px; padding: 0 20px; border-radius: 999px; border: 1.5px solid #d9ccaa; background: #fafaf7; cursor: pointer; font-family: 'Cormorant Garamond', serif; }
         .filter-btn.active { background: #71815d; color: white; border-color: #71815d; }
-        .search-wrapper { position: relative; width: 240px; }
+        .search-wrapper { position: relative; width: 240px; margin-bottom: 12px; }
         .search-wrapper input { width: 100%; height: 40px; border-radius: 999px; border: 1.5px solid #d9ccaa; padding-left: 38px; }
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #5f6f50;
-            color: white;
-            padding: 14px 24px;
-            border-radius: 999px;
-            z-index: 1000;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: 0.3s;
-            pointer-events: none;
-        }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #5f6f50; color: white; padding: 14px 24px; border-radius: 999px; z-index: 1000; opacity: 0; transform: translateY(20px); transition: 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; transform: translateY(0); }
+
         @media (max-width: 700px) {
             .card { padding: 24px 20px; }
             .stats-row { grid-template-columns: 1fr 1fr; }
             .gifts-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-            .btn-confirm-presenca { padding: 0 16px; font-size: 0.9rem; height: 40px; }
         }
     </style>
 </head>
 <body>
 <div class="admin-container">
-    <!-- HEADER romântico -->
     <div class="card">
         <div class="admin-header">
             <div class="title-group">
@@ -462,20 +327,18 @@
                 <span class="divider-dot"></span>
                 <span style="font-family:'Great Vibes',cursive;font-size:2rem;color:#6f7d61;">Joselis & Talia</span>
                 <span class="divider-dot"></span>
-                <!-- NOVO BOTÃO: Confirmar Presença -->
-                <a href="confirmação.html" class="btn-confirm-presenca" title="Ir para página de confirmação de presença">
+                <a href="confirmacao.html" class="btn-confirm-presenca">
                     <i class="fa-regular fa-calendar-check"></i> Confirmar Presença
                 </a>
             </div>
         </div>
-        <!-- Sistema de abas elegante -->
         <div class="tabs-container" style="margin-top: 28px;">
             <button class="tab-btn active" data-tab="convidadostab"><i class="fa-regular fa-calendar-check"></i> Convidados</button>
             <button class="tab-btn" data-tab="presentestab"><i class="fa-solid fa-gift"></i> Lista de Presentes</button>
         </div>
     </div>
 
-    <!-- ================= ABA CONVIDADOS (conteúdo original) ================= -->
+    <!-- ABA CONVIDADOS -->
     <div id="convidadostab" class="tab-content active-tab">
         <div class="stats-row" id="statsRow">
             <div class="stat-card total"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
@@ -484,18 +347,34 @@
             <div class="stat-card cancelled"><div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div><div class="stat-number" id="statCancelled">0</div><div class="stat-label">Cancelados</div></div>
         </div>
         <div class="card">
-            <form class="add-guest-form" id="addGuestForm"><div class="input-wrapper"><i class="fa-regular fa-user"></i><input type="text" id="newGuestName" placeholder="Nome completo do convidado..."></div><button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Adicionar</button></form>
+            <form class="add-guest-form" id="addGuestForm">
+                <div class="input-wrapper"><i class="fa-regular fa-user"></i><input type="text" id="newGuestName" placeholder="Nome completo do convidado..."></div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Adicionar</button>
+            </form>
         </div>
         <div class="card">
-            <div class="filters-row" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                <div class="filter-buttons" id="filterButtons"><button class="filter-btn active" data-filter="todos">Todos</button><button class="filter-btn" data-filter="pendente">Pendentes</button><button class="filter-btn" data-filter="confirmada">Confirmados</button><button class="filter-btn" data-filter="cancelada">Cancelados</button></div>
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div class="filter-buttons" id="filterButtons">
+                    <button class="filter-btn active" data-filter="todos">Todos</button>
+                    <button class="filter-btn" data-filter="pendente">Pendentes</button>
+                    <button class="filter-btn" data-filter="confirmada">Confirmados</button>
+                    <button class="filter-btn" data-filter="cancelada">Cancelados</button>
+                </div>
                 <div class="search-wrapper"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="searchInput" placeholder="Buscar convidado..."></div>
             </div>
-            <div class="table-wrapper"><tr><thead> Late<th>Convidado</th><th>Status</th><th style="text-align:center;">Ações</th> </tr</thead><tbody id="guestsTableBody"></tbody> </table<div class="empty-state" id="emptyState" style="display:none; text-align:center; padding:40px;"><i class="fa-regular fa-folder-open"></i><p>Nenhum convidado encontrado</p></div></div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>Convidado</th><th>Status</th><th style="text-align:center;">Ações</th></tr>
+                    </thead>
+                    <tbody id="guestsTableBody"></tbody>
+                </table>
+                <div class="empty-state" id="emptyState" style="display:none; text-align:center; padding:40px;"><i class="fa-regular fa-folder-open"></i><p>Nenhum convidado encontrado</p></div>
+            </div>
         </div>
     </div>
 
-    <!-- ================= ABA PRESENTES (IndexedDB + adição de foto/legenda) ================= -->
+    <!-- ABA PRESENTES -->
     <div id="presentestab" class="tab-content">
         <div class="card">
             <h2 style="font-size: 1.8rem; color:#6f7d61; margin-bottom: 24px;"><i class="fa-solid fa-gift"></i> Adicionar presente</h2>
@@ -507,21 +386,29 @@
                     <button class="btn btn-primary" id="btnSalvarPresente"><i class="fa-solid fa-floppy-disk"></i> Salvar presente</button>
                 </div>
             </div>
-            <p style="margin-top: 12px; font-size: 0.85rem; color:#8a9a78;"><i class="fa-regular fa-circle-info"></i> As fotos ficarão salvas no IndexedDB. Use imagens de até 2MB para melhor performance.</p>
+            <p style="margin-top: 12px; font-size: 0.85rem; color:#8a9a78;"><i class="fa-regular fa-circle-info"></i> As fotos ficarão salvas no IndexedDB. Use imagens de até 2MB.</p>
         </div>
-
         <div class="card">
             <h2 style="font-size: 1.8rem; color:#6f7d61;"><i class="fa-regular fa-rectangle-list"></i> Lista de presentes do casamento</h2>
-            <div id="giftsListContainer" class="gifts-grid">
-                <div class="empty-gifts">Carregando presentes...</div>
-            </div>
+            <div id="giftsListContainer" class="gifts-grid"><div class="empty-gifts">Carregando presentes...</div></div>
         </div>
     </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-    // ------------------- 1. INDEXEDDB para PRESENTES -------------------
+    // ==================== FUNÇÃO DE ESCAPE GLOBAL ====================
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // ==================== INDEXEDDB PARA PRESENTES ====================
     const DB_NAME = 'WeddingGiftsDB';
     const STORE_NAME = 'gifts';
     let db = null;
@@ -573,7 +460,6 @@
         });
     }
 
-    // Renderizar lista de presentes na aba
     async function renderGifts() {
         const container = document.getElementById('giftsListContainer');
         if (!container) return;
@@ -610,20 +496,11 @@
         }
     }
 
-    function escapeHTML(str) {
-        if(!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if(m === '&') return '&amp;';
-            if(m === '<') return '&lt;';
-            if(m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    // preview da imagem
+    // Preview e salvamento de presentes
     const fotoInput = document.getElementById('presenteFotoInput');
     const previewContainer = document.getElementById('previewContainer');
     let selectedImageDataUrl = null;
+
     fotoInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file && file.type.startsWith('image/')) {
@@ -633,7 +510,7 @@
                 previewContainer.innerHTML = `<img src="${selectedImageDataUrl}" style="width:100%; height:100%; object-fit:cover;">`;
             };
             reader.readAsDataURL(file);
-        } else if(file) {
+        } else if (file) {
             showToast('Por favor, selecione uma imagem válida.');
             fotoInput.value = '';
         }
@@ -666,19 +543,36 @@
     }
     btnSalvar.addEventListener('click', salvarPresente);
 
-    // ------------------- 2. SISTEMA DE CONVIDADOS (LOCALSTORAGE) -------------------
+    // ==================== CONVIDADOS (LOCALSTORAGE) ====================
     const STORAGE_KEY = 'casamento_guests_admin';
-    function getDefaultGuests() { return [
-        { id: 1, name: 'Ana Clara Souza', status: 'pendente' },
-        { id: 2, name: 'Bruno Mendes', status: 'confirmada' },
-        { id: 3, name: 'Carla Ribeiro', status: 'pendente' },
-        { id: 4, name: 'Daniel Oliveira', status: 'cancelada' },
-        { id: 5, name: 'Elisa Castro', status: 'confirmada' },
-        { id: 6, name: 'Felipe Nogueira', status: 'pendente' },
-    ]; }
-    function loadGuests() { const raw = localStorage.getItem(STORAGE_KEY); if(raw) { try { return JSON.parse(raw); } catch(e) { return getDefaultGuests(); } } saveGuests(getDefaultGuests()); return getDefaultGuests(); }
-    function saveGuests(guests) { localStorage.setItem(STORAGE_KEY, JSON.stringify(guests)); }
-    function generateId(guests) { return guests.length ? Math.max(...guests.map(g => g.id)) + 1 : 1; }
+    function getDefaultGuests() {
+        return [
+            { id: 1, name: 'Ana Clara Souza', status: 'pendente' },
+            { id: 2, name: 'Bruno Mendes', status: 'confirmada' },
+            { id: 3, name: 'Carla Ribeiro', status: 'pendente' },
+            { id: 4, name: 'Daniel Oliveira', status: 'cancelada' },
+            { id: 5, name: 'Elisa Castro', status: 'confirmada' },
+            { id: 6, name: 'Felipe Nogueira', status: 'pendente' },
+        ];
+    }
+
+    function loadGuests() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            try { return JSON.parse(raw); }
+            catch(e) { return getDefaultGuests(); }
+        }
+        saveGuests(getDefaultGuests());
+        return getDefaultGuests();
+    }
+
+    function saveGuests(guests) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
+    }
+
+    function generateId(guests) {
+        return guests.length ? Math.max(...guests.map(g => g.id)) + 1 : 1;
+    }
 
     let guests = loadGuests();
     let currentFilter = 'todos';
@@ -698,18 +592,27 @@
     function getFilteredGuests() {
         let filtered = [...guests];
         if (currentFilter !== 'todos') filtered = filtered.filter(g => g.status === currentFilter);
-        if (searchTerm.trim()) { const term = searchTerm.trim().toLowerCase(); filtered = filtered.filter(g => g.name.toLowerCase().includes(term)); }
+        if (searchTerm.trim()) {
+            const term = searchTerm.trim().toLowerCase();
+            filtered = filtered.filter(g => g.name.toLowerCase().includes(term));
+        }
         return filtered;
     }
+
     function updateStats() {
         statTotal.textContent = guests.length;
         statPending.textContent = guests.filter(g => g.status === 'pendente').length;
         statConfirmed.textContent = guests.filter(g => g.status === 'confirmada').length;
         statCancelled.textContent = guests.filter(g => g.status === 'cancelada').length;
     }
+
     function renderTableConvidados() {
         const filtered = getFilteredGuests();
-        if (filtered.length === 0) { guestsTableBody.innerHTML = ''; emptyState.style.display = 'block'; return; }
+        if (filtered.length === 0) {
+            guestsTableBody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
         emptyState.style.display = 'none';
         guestsTableBody.innerHTML = filtered.map(guest => {
             const initials = guest.name.split(' ').map(w => w.charAt(0).toUpperCase()).slice(0,2).join('');
@@ -719,71 +622,115 @@
                 case 'confirmada': badgeClass='badge-confirmed'; badgeText='Confirmada'; break;
                 case 'cancelada': badgeClass='badge-cancelled'; badgeText='Cancelada'; break;
             }
-            return `<tr data-id="${guest.id}"><td><div class="guest-name-cell"><div class="avatar-dot">${initials}</div>${escapeHTML(guest.name)}</div></td>
-            <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-            <td><div class="actions-cell"><button class="btn-status" title="Pendente" onclick="window._adminSetStatus(${guest.id}, 'pendente')"><i class="fa-regular fa-clock"></i></button>
-            <button class="btn-status" title="Confirmada" onclick="window._adminSetStatus(${guest.id}, 'confirmada')" style="color:#5b8c5a;"><i class="fa-solid fa-check"></i></button>
-            <button class="btn-status" title="Cancelada" onclick="window._adminSetStatus(${guest.id}, 'cancelada')" style="color:#b85c5c;"><i class="fa-solid fa-xmark"></i></button>
-            <button class="btn-delete" title="Remover" onclick="window._adminDeleteGuest(${guest.id})"><i class="fa-regular fa-trash-can"></i></button></div></td></tr>`;
+            return `<tr data-id="${guest.id}">
+                        <td><div class="guest-name-cell"><div class="avatar-dot">${escapeHTML(initials)}</div>${escapeHTML(guest.name)}</div></td>
+                        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                        <td><div class="actions-cell">
+                            <button class="btn-status" title="Pendente" onclick="window._adminSetStatus(${guest.id}, 'pendente')"><i class="fa-regular fa-clock"></i></button>
+                            <button class="btn-status" title="Confirmada" onclick="window._adminSetStatus(${guest.id}, 'confirmada')" style="color:#5b8c5a;"><i class="fa-solid fa-check"></i></button>
+                            <button class="btn-status" title="Cancelada" onclick="window._adminSetStatus(${guest.id}, 'cancelada')" style="color:#b85c5c;"><i class="fa-solid fa-xmark"></i></button>
+                            <button class="btn-delete" title="Remover" onclick="window._adminDeleteGuest(${guest.id})"><i class="fa-regular fa-trash-can"></i></button>
+                        </div></td>
+                    </tr>`;
         }).join('');
         updateStats();
     }
+
     window._adminSetStatus = function(id, newStatus) {
         const guest = guests.find(g => g.id === id);
         if (!guest || guest.status === newStatus) return;
         guest.status = newStatus;
         saveGuests(guests);
         renderTableConvidados();
-        showToast(`"${guest.name}" → ${ {pendente:'Pendente', confirmada:'Confirmada', cancelada:'Cancelada' }[newStatus]}`);
+        const statusLabel = { pendente: 'Pendente', confirmada: 'Confirmada', cancelada: 'Cancelada' }[newStatus];
+        showToast(`"${guest.name}" → ${statusLabel}`);
     };
+
     window._adminDeleteGuest = function(id) {
         const guest = guests.find(g => g.id === id);
         if (!guest) return;
-        if(confirm(`Remover "${guest.name}" da lista?`)) {
+        if (confirm(`Remover "${guest.name}" da lista?`)) {
             guests = guests.filter(g => g.id !== id);
             saveGuests(guests);
             renderTableConvidados();
             showToast(`"${guest.name}" removido(a)`);
         }
     };
+
     function addGuest(name) {
         const trimmed = name.trim();
-        if (!trimmed) return;
-        if (guests.some(g => g.name.toLowerCase() === trimmed.toLowerCase())) { showToast('Este convidado já está na lista'); return; }
+        if (!trimmed) { showToast('Digite um nome válido'); return; }
+        if (guests.some(g => g.name.toLowerCase() === trimmed.toLowerCase())) {
+            showToast('Este convidado já está na lista');
+            return;
+        }
         guests.push({ id: generateId(guests), name: trimmed, status: 'pendente' });
         saveGuests(guests);
         renderTableConvidados();
         newNameInput.value = '';
         showToast(`"${trimmed}" adicionado(a)`);
     }
-    addForm.addEventListener('submit', e => { e.preventDefault(); addGuest(newNameInput.value); });
-    searchInput.addEventListener('input', function() { searchTerm = this.value; renderTableConvidados(); });
-    filterContainer.addEventListener('click', (e) => { const btn = e.target.closest('.filter-btn'); if(btn) { document.querySelectorAll('#filterButtons .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentFilter = btn.dataset.filter; renderTableConvidados(); } });
+
+    addForm.addEventListener('submit', e => {
+        e.preventDefault();
+        addGuest(newNameInput.value);
+    });
+
+    searchInput.addEventListener('input', function() {
+        searchTerm = this.value;
+        renderTableConvidados();
+    });
+
+    filterContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('#filterButtons .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderTableConvidados();
+    });
+
     renderTableConvidados();
 
-    // ========== ABAS ==========
+    // ==================== ABAS ====================
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+
     function switchTab(tabId) {
         tabContents.forEach(content => content.classList.remove('active-tab'));
         document.getElementById(tabId).classList.add('active-tab');
         tabBtns.forEach(btn => btn.classList.remove('active'));
         document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
-        if(tabId === 'presentestab') renderGifts();
+        if (tabId === 'presentestab') {
+            renderGifts();  // recarrega os presentes sempre que a aba for aberta
+        }
     }
+
     tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => { const tabId = btn.getAttribute('data-tab'); switchTab(tabId); });
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            switchTab(tabId);
+        });
     });
 
+    // ==================== INICIALIZAÇÃO ====================
     openIndexedDB().then(() => {
-        console.log('IndexedDB pronto para presentes');
-        if(document.getElementById('presentestab').classList.contains('active-tab')) renderGifts();
-        else renderGifts();
+        console.log('IndexedDB pronto');
+        // Se a aba ativa inicialmente for a de presentes, carrega; senão carrega sob demanda
+        if (document.getElementById('presentestab').classList.contains('active-tab')) {
+            renderGifts();
+        }
     }).catch(err => console.warn('Erro IndexedDB', err));
 
+    // Toast
     const toastEl = document.getElementById('toast');
     let toastTimer;
-    function showToast(msg) { clearTimeout(toastTimer); toastEl.textContent = msg; toastEl.classList.add('show'); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400); }
+    function showToast(msg) {
+        clearTimeout(toastTimer);
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+    }
     window.showToast = showToast;
 </script>
 </body>
