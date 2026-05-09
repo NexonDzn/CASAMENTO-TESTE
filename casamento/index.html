@@ -235,7 +235,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Stats */
+        /* Stats cards com cores */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -250,6 +250,22 @@
             text-align: center;
             border: 1px solid #e8e2d2;
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Cores nas bordas laterais das estatísticas */
+        .stat-item.total {
+            border-left: 5px solid #71815d;
+        }
+        .stat-item.pending {
+            border-left: 5px solid var(--pending);
+        }
+        .stat-item.confirmed {
+            border-left: 5px solid var(--confirmed);
+        }
+        .stat-item.cancelled {
+            border-left: 5px solid var(--cancelled);
         }
 
         .stat-item:hover {
@@ -380,7 +396,7 @@
 
         .search-box {
             position: relative;
-            min-width: 220px;
+            min-width: 200px;
         }
 
         .search-box i {
@@ -402,8 +418,9 @@
             font-family: 'Cormorant Garamond', serif;
         }
 
-        /* Tabela responsiva */
+        /* Tabela responsiva - sem rolagem horizontal no mobile */
         .table-responsive {
+            width: 100%;
             overflow-x: auto;
             border-radius: var(--radius-md);
         }
@@ -411,12 +428,11 @@
         .guest-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 500px;
         }
 
         .guest-table th {
             text-align: left;
-            padding: 18px 12px;
+            padding: 16px 12px;
             font-size: 0.7rem;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -426,24 +442,24 @@
         }
 
         .guest-table td {
-            padding: 14px 12px;
+            padding: 12px 8px;
             border-bottom: 1px solid #f0ebdd;
             color: #5f6f50;
-            font-size: 1.1rem;
+            font-size: 1rem;
             vertical-align: middle;
         }
 
         .guest-name {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-weight: 600;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         .avatar {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             background: linear-gradient(145deg, #d8c799, #c4ad72);
             border-radius: 50%;
             display: flex;
@@ -451,18 +467,19 @@
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             flex-shrink: 0;
         }
 
         .badge {
             display: inline-block;
-            padding: 6px 16px;
+            padding: 5px 12px;
             border-radius: 60px;
             font-size: 0.7rem;
             letter-spacing: 1px;
             font-weight: 700;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .badge-pending { background: var(--pending-bg); color: #a07818; border: 1px solid #e0c97f; }
@@ -472,26 +489,26 @@
         /* Botões de ação com cores destacadas */
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            justify-content: flex-start;
         }
 
         .action-btn {
             background: transparent;
             border: none;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: 0.2s;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #7f8a71;
         }
 
-        /* cores específicas para cada ação */
         .action-btn.pending-btn { color: #c9a94e; }
         .action-btn.confirm-btn { color: #5b8c5a; }
         .action-btn.cancel-btn { color: #b85c5c; }
@@ -627,31 +644,84 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Responsividade Mobile - Mais espaço e visibilidade */
+        /* RESPONSIVIDADE MOBILE - Tabela sem scroll horizontal */
         @media (max-width: 780px) {
             .card__inner { padding: 20px 18px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
             .gifts-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
             .brand-text h1 { font-size: 2rem; }
             .couple-name span { font-size: 1.4rem; }
-            .action-buttons { gap: 6px; }
-            .action-btn { width: 42px; height: 42px; font-size: 1.2rem; }
         }
 
-        @media (max-width: 560px) {
+        @media (max-width: 640px) {
             body { padding: 16px 12px 40px; }
             .toolbar { flex-direction: column; align-items: stretch; }
             .filter-group { justify-content: flex-start; }
+            
+            .guest-table th, 
+            .guest-table td {
+                padding: 8px 4px;
+                font-size: 0.85rem;
+            }
+            
+            .guest-name {
+                gap: 6px;
+                font-size: 0.85rem;
+            }
+            
+            .avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+            
+            .badge {
+                padding: 3px 8px;
+                font-size: 0.6rem;
+                white-space: nowrap;
+            }
+            
+            .action-buttons {
+                gap: 4px;
+            }
+            
+            .action-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+            
+            .guest-table th:first-child,
+            .guest-table td:first-child {
+                padding-left: 6px;
+            }
+            
+            .guest-table th:last-child,
+            .guest-table td:last-child {
+                padding-right: 6px;
+            }
+        }
+
+        @media (max-width: 560px) {
             .tabs-container { gap: 6px; }
-            .tab-btn { font-size: 0.9rem; padding: 8px 4px; }
+            .tab-btn { font-size: 0.85rem; padding: 8px 4px; }
             .admin-header { flex-direction: column; align-items: flex-start; }
             .couple-name { align-self: flex-start; }
-            .stat-number { font-size: 2rem; }
+            .stat-number { font-size: 1.8rem; }
             .gift-upload-area { flex-direction: column; align-items: stretch; }
             .preview-card { width: 90px; height: 90px; }
-            .guest-table th, .guest-table td { padding: 10px 8px; font-size: 0.95rem; }
-            .avatar { width: 32px; height: 32px; font-size: 0.8rem; }
-            .badge { padding: 4px 12px; font-size: 0.65rem; }
+            
+            /* Força a tabela a não ter overflow horizontal */
+            .table-responsive {
+                overflow-x: visible;
+            }
+            .guest-table {
+                min-width: 100%;
+            }
+            .guest-table td, .guest-table th {
+                white-space: normal;
+                word-break: break-word;
+            }
         }
     </style>
 </head>
@@ -692,10 +762,10 @@
         <div class="card">
             <div class="card__inner">
                 <div class="stats-grid" id="statsRow">
-                    <div class="stat-item"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
-                    <div class="stat-item"><div class="stat-icon"><i class="fa-regular fa-clock"></i></div><div class="stat-number" id="statPending">0</div><div class="stat-label">Pendentes</div></div>
-                    <div class="stat-item"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="stat-number" id="statConfirmed">0</div><div class="stat-label">Confirmados</div></div>
-                    <div class="stat-item"><div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div><div class="stat-number" id="statCancelled">0</div><div class="stat-label">Cancelados</div></div>
+                    <div class="stat-item total"><div class="stat-icon"><i class="fa-solid fa-users"></i></div><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total</div></div>
+                    <div class="stat-item pending"><div class="stat-icon"><i class="fa-regular fa-clock"></i></div><div class="stat-number" id="statPending">0</div><div class="stat-label">Pendentes</div></div>
+                    <div class="stat-item confirmed"><div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div><div class="stat-number" id="statConfirmed">0</div><div class="stat-label">Confirmados</div></div>
+                    <div class="stat-item cancelled"><div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div><div class="stat-number" id="statCancelled">0</div><div class="stat-label">Cancelados</div></div>
                 </div>
 
                 <form class="add-guest-form" id="addGuestForm">
@@ -816,7 +886,7 @@
 
     function getFilteredGuests() { let filtered = [...guests]; if(currentFilter!=='todos') filtered = filtered.filter(g=>g.status===currentFilter); if(searchTerm.trim()) filtered = filtered.filter(g=>g.name.toLowerCase().includes(searchTerm.trim().toLowerCase())); return filtered; }
     function updateStats() { document.getElementById('statTotal').textContent=guests.length; document.getElementById('statPending').textContent=guests.filter(g=>g.status==='pendente').length; document.getElementById('statConfirmed').textContent=guests.filter(g=>g.status==='confirmada').length; document.getElementById('statCancelled').textContent=guests.filter(g=>g.status==='cancelada').length; }
-    function renderTableConvidados() { const filtered = getFilteredGuests(); const tbody = document.getElementById('guestsTableBody'), emptyDiv = document.getElementById('emptyState'); if(!filtered.length){ tbody.innerHTML=''; emptyDiv.style.display='block'; updateStats(); return; } emptyDiv.style.display='none'; tbody.innerHTML = filtered.map(guest=>{ const initials = guest.name.split(' ').map(w=>w.charAt(0).toUpperCase()).slice(0,2).join(''); let badgeClass='', badgeText=''; if(guest.status==='pendente'){ badgeClass='badge-pending'; badgeText='Pendente'; } else if(guest.status==='confirmada'){ badgeClass='badge-confirmed'; badgeText='Confirmada'; } else { badgeClass='badge-cancelled'; badgeText='Cancelada'; } return `<tr data-id="${guest.id}"><td><div class="guest-name"><div class="avatar">${escapeHTML(initials)}</div>${escapeHTML(guest.name)}</div></td><td><span class="badge ${badgeClass}">${badgeText}</span></td><td><div class="action-buttons"><button class="action-btn pending-btn" onclick="window._setStatus(${guest.id},'pendente')" title="Pendente"><i class="fa-regular fa-clock"></i></button><button class="action-btn confirm-btn" onclick="window._setStatus(${guest.id},'confirmada')" title="Confirmar"><i class="fa-regular fa-circle-check"></i></button><button class="action-btn cancel-btn" onclick="window._setStatus(${guest.id},'cancelada')" title="Cancelar"><i class="fa-regular fa-circle-xmark"></i></button><button class="action-btn delete-btn" onclick="window._deleteGuest(${guest.id})" title="Remover"><i class="fa-regular fa-trash-can"></i></button></div></td></tr>`; }).join(''); updateStats(); }
+    function renderTableConvidados() { const filtered = getFilteredGuests(); const tbody = document.getElementById('guestsTableBody'), emptyDiv = document.getElementById('emptyState'); if(!filtered.length){ tbody.innerHTML=''; emptyDiv.style.display='block'; updateStats(); return; } emptyDiv.style.display='none'; tbody.innerHTML = filtered.map(guest=>{ const initials = guest.name.split(' ').map(w=>w.charAt(0).toUpperCase()).slice(0,2).join(''); let badgeClass='', badgeText=''; if(guest.status==='pendente'){ badgeClass='badge-pending'; badgeText='Pendente'; } else if(guest.status==='confirmada'){ badgeClass='badge-confirmed'; badgeText='Confirmada'; } else { badgeClass='badge-cancelled'; badgeText='Cancelada'; } return `<tr data-id="${guest.id}"><td><div class="guest-name"><div class="avatar">${escapeHTML(initials)}</div><span>${escapeHTML(guest.name)}</span></div></td><td><span class="badge ${badgeClass}">${badgeText}</span></td><td><div class="action-buttons"><button class="action-btn pending-btn" onclick="window._setStatus(${guest.id},'pendente')" title="Pendente"><i class="fa-regular fa-clock"></i></button><button class="action-btn confirm-btn" onclick="window._setStatus(${guest.id},'confirmada')" title="Confirmar"><i class="fa-regular fa-circle-check"></i></button><button class="action-btn cancel-btn" onclick="window._setStatus(${guest.id},'cancelada')" title="Cancelar"><i class="fa-regular fa-circle-xmark"></i></button><button class="action-btn delete-btn" onclick="window._deleteGuest(${guest.id})" title="Remover"><i class="fa-regular fa-trash-can"></i></button></div></td></tr>`; }).join(''); updateStats(); }
     window._setStatus = async (id,newStatus) => { const guest = guests.find(g=>g.id===id); if(guest && guest.status!==newStatus){ guest.status=newStatus; saveGuestsToLocal(guests); renderTableConvidados(); showToast(`Status alterado: ${guest.name}`); await syncLocalToGist(); } };
     window._deleteGuest = async (id) => { const guest = guests.find(g=>g.id===id); if(guest && confirm(`Remover "${guest.name}"?`)){ guests = guests.filter(g=>g.id!==id); saveGuestsToLocal(guests); renderTableConvidados(); showToast(`"${guest.name}" removido`); await syncLocalToGist(); } };
     document.getElementById('addGuestForm').addEventListener('submit', async (e)=>{ e.preventDefault(); const name = document.getElementById('newGuestName').value.trim(); if(!name) { showToast('Digite um nome'); return; } if(guests.some(g=>g.name.toLowerCase()===name.toLowerCase())){ showToast('Convidado já existe'); return; } guests.push({ id: Date.now(), name, status:'pendente' }); saveGuestsToLocal(guests); renderTableConvidados(); document.getElementById('newGuestName').value=''; showToast(`"${name}" adicionado`); await syncLocalToGist(); });
