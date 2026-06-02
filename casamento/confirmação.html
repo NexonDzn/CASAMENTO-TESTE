@@ -471,27 +471,76 @@ body {
         await renderGiftsIntoModal();
     }
 
-    async function loadGiftsFromAPI() {
+    // Evita erro caso o projeto antigo não tenha a função openIndexedDB nesta página
+    function hasIndexedDBFallback() {
+        return typeof openIndexedDB === 'function';
+    }
+
+    function escapeHTML(value) {
+        return String(value || '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    async function getAllGifts() {
         try {
-            // Requisição para a sua função Serverless na Vercel
-            const response = await fetch('/api/gist');
+            // Busca os presentes em tempo real diretamente da sua API na Vercel
+            const response = await fetch('/api/gist', {
+                method: 'GET',
+                cache: 'no-store'
+            });
+
             if (response.ok) {
                 const data = await response.json();
-                if (data && data.gifts) {
-                    return data.gifts;
-                }
+
+                // Garante compatibilidade caso a chave salva seja 'gifts' ou 'presentes'
+                const listaPresentes = data.gifts || data.presentes || [];
+                console.log('🎁 Presentes carregados da nuvem com sucesso:', listaPresentes);
+                return Array.isArray(listaPresentes) ? listaPresentes : [];
             }
+
+            console.warn('⚠️ API respondeu com erro:', response.status, response.statusText);
         } catch (error) {
-            console.error('Erro ao buscar presentes da API:', error);
+            console.error('Erro ao buscar presentes da nuvem Vercel:', error);
         }
-        return null;
+
+        // Plano B: Se a internet/API falhar, tenta ler do banco local antigo por segurança
+        return new Promise((resolve) => {
+            try {
+                if (!hasIndexedDBFallback()) {
+                    resolve([]);
+                    return;
+                }
+
+                openIndexedDB().then(db => {
+                    const nomeStore = db.objectStoreNames.contains('gifts') ? 'gifts' : 'presentes';
+
+                    if (!db.objectStoreNames.contains(nomeStore)) {
+                        resolve([]);
+                        return;
+                    }
+
+                    const tx = db.transaction(nomeStore, 'readonly');
+                    const store = tx.objectStore(nomeStore);
+                    const req = store.getAll();
+
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => resolve([]);
+                }).catch(() => resolve([]));
+            } catch(e) {
+                resolve([]);
+            }
+        });
     }
 
     async function renderGiftsIntoModal() {
         const contentDiv = document.getElementById('modalGiftsContent');
-        
-        // Agora busca para todo mundo direto da nuvem, e não mais do dispositivo local
-        const gifts = await loadGiftsFromAPI();
+
+        // Busca primeiro da nuvem e usa o banco local antigo só como segurança
+        const gifts = await getAllGifts();
 
         if (!gifts || gifts.length === 0) {
             contentDiv.innerHTML = `
@@ -506,18 +555,35 @@ body {
         gifts.forEach(gift => {
             const card = document.createElement('div');
             card.className = 'gift-card';
-            
-            // Renderiza a imagem salva no painel Admin (Base64) ou uma imagem padrão
-            const imgSrc = gift.imageDataUrl || 'https://via.placeholder.com/150?text=Sem+Foto';
-            
+
+            // Aceita os nomes de campos mais comuns usados no painel/admin
+            const giftName = gift.name || gift.nome || gift.title || gift.titulo || 'Presente';
+            const imgSrc = gift.imageDataUrl || gift.imagem || gift.image || gift.foto || 'https://via.placeholder.com/150?text=Sem+Foto';
+
             card.innerHTML = `
-                <img src="${imgSrc}" alt="${gift.name}" class="gift-img">
+                <img src="${escapeHTML(imgSrc)}" alt="${escapeHTML(giftName)}" class="gift-img">
                 <div class="gift-info">
-                    <h3 class="gift-title">${gift.name}</h3>
+                    <h3 class="gift-title">${escapeHTML(giftName)}</h3>
                 </div>
             `;
             contentDiv.appendChild(card);
         });
+    }
+
+    // Pré-carregar os dados para evitar delay na primeira abertura do modal
+    if (hasIndexedDBFallback()) {
+        openIndexedDB().then(async () => {
+            console.log('✅ Banco local verificado. Puxando presentes atualizados...');
+            try {
+                // Força a chamada da nova função para testar o carregamento assim que a página abre
+                await getAllGifts();
+            } catch(e) {
+                console.warn(e);
+            }
+        }).catch(err => console.warn('⚠️ Aviso sobre o banco local:', err));
+    } else {
+        // Mesmo sem banco local, já testa a nuvem quando a página abre
+        getAllGifts().catch(err => console.warn('⚠️ Aviso ao pré-carregar presentes:', err));
     }
 
     // ====================== CONFIRMAÇÃO POR WHATSAPP ======================
