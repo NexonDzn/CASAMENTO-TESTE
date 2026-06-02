@@ -439,110 +439,89 @@ body {
 </div>
 
 <script>
-    // ====================== INDEXEDDB : ACESSO AOS PRESENTES CADASTRADOS NO PAINEL ADMIN ======================
-    const DB_NAME = 'WeddingGiftsDB';
-    const STORE_NAME = 'gifts';
-    let db = null;
-
-    // Abrir / conectar ao IndexedDB (mesmo banco usado no painel admin)
-    function openIndexedDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, 1);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-                db = request.result;
-                resolve(db);
-            };
-            request.onupgradeneeded = (event) => {
-                const dbRef = event.target.result;
-                if (!dbRef.objectStoreNames.contains(STORE_NAME)) {
-                    dbRef.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                }
-            };
-        });
-    }
-
-    // Buscar todos os presentes (apenas leitura)
-    async function getAllGifts() {
-        if (!db) await openIndexedDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const store = tx.objectStore(STORE_NAME);
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result || []);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    // Função para renderizar os presentes dentro do modal
-    async function renderGiftsIntoModal() {
-        const container = document.getElementById('modalGiftsContent');
-        if (!container) return;
-        try {
-            const gifts = await getAllGifts();
-            if (!gifts.length) {
-                container.innerHTML = `<div class="empty-gifts-modal">
-                    <i class="fa-regular fa-heart"></i>
-                    <p>💝 A lista de presentes será atualizada em breve.<br>Volte para conferir!</p>
-                </div>`;
-                return;
-            }
-            // Monta grid com foto e nome (sem botões de edição/exclusão - apenas visual)
-            container.innerHTML = gifts.map(gift => `
-                <div class="gift-card">
-                    <img class="gift-img" src="${gift.imageDataUrl}" alt="${escapeHTML(gift.name)}" onerror="this.src='https://placehold.co/300x300?text=Presente'">
-                    <div class="gift-info">
-                        <div class="gift-title">${escapeHTML(gift.name)}</div>
-                    </div>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error('Erro ao carregar presentes:', error);
-            container.innerHTML = `<div class="empty-gifts-modal"><i class="fa-regular fa-circle-exclamation"></i><p>Não foi possível carregar os presentes no momento.</p></div>`;
-        }
-    }
-
-    // Helper para escapar HTML
-    function escapeHTML(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    // ====================== MODAL CONTROLE ======================
     const modal = document.getElementById('giftsModal');
     const openBtn = document.getElementById('openGiftsModalBtn');
     const closeBtn = document.getElementById('closeModalBtn');
 
-    async function openModalAndLoadGifts() {
-        // Mostra o modal com loading
-        modal.style.display = 'flex';
-        const contentDiv = document.getElementById('modalGiftsContent');
-        if (contentDiv) {
-            contentDiv.innerHTML = `<div class="loading-spinner"><i class="fa-regular fa-heart fa-pulse"></i> Carregando presentes...</div>`;
-        }
-        // Carrega os presentes do IndexedDB
-        await renderGiftsIntoModal();
-    }
+    // ====================== CONTROLE DO MODAL ======================
+    openBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModalAndLoadGifts();
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
 
     function closeModal() {
         modal.style.display = 'none';
     }
 
-    // Eventos do modal
-    openBtn.addEventListener('click', openModalAndLoadGifts);
-    closeBtn.addEventListener('click', closeModal);
-    // Fechar ao clicar fora do conteúdo
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
+    // ====================== BUSCA DOS PRESENTES NA NUVEM ======================
+    async function openModalAndLoadGifts() {
+        // Mostra o modal e exibe animação de carregamento
+        modal.style.display = 'flex';
+        const contentDiv = document.getElementById('modalGiftsContent');
+        if (contentDiv) {
+            contentDiv.innerHTML = `<div class="loading-spinner"><i class="fa-regular fa-heart fa-pulse"></i> Carregando presentes da nuvem...</div>`;
+        }
 
-    // ====================== CONFIRMAÇÃO POR WHATSAPP (original, sem alterações) ======================
-    const whatsappNumber = '554396728578';  // Número do whatsapp (pode ajustar)
+        // Busca os presentes salvos na API do Gist
+        await renderGiftsIntoModal();
+    }
+
+    async function loadGiftsFromAPI() {
+        try {
+            // Requisição para a sua função Serverless na Vercel
+            const response = await fetch('/api/gist');
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.gifts) {
+                    return data.gifts;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao buscar presentes da API:', error);
+        }
+        return null;
+    }
+
+    async function renderGiftsIntoModal() {
+        const contentDiv = document.getElementById('modalGiftsContent');
+        
+        // Agora busca para todo mundo direto da nuvem, e não mais do dispositivo local
+        const gifts = await loadGiftsFromAPI();
+
+        if (!gifts || gifts.length === 0) {
+            contentDiv.innerHTML = `
+                <div class="empty-gifts-modal">
+                    <i class="fa-solid fa-box-open"></i>
+                    <p>Nenhum presente na lista no momento.</p>
+                </div>`;
+            return;
+        }
+
+        contentDiv.innerHTML = '';
+        gifts.forEach(gift => {
+            const card = document.createElement('div');
+            card.className = 'gift-card';
+            
+            // Renderiza a imagem salva no painel Admin (Base64) ou uma imagem padrão
+            const imgSrc = gift.imageDataUrl || 'https://via.placeholder.com/150?text=Sem+Foto';
+            
+            card.innerHTML = `
+                <img src="${imgSrc}" alt="${gift.name}" class="gift-img">
+                <div class="gift-info">
+                    <h3 class="gift-title">${gift.name}</h3>
+                </div>
+            `;
+            contentDiv.appendChild(card);
+        });
+    }
+
+    // ====================== CONFIRMAÇÃO POR WHATSAPP ======================
+    const whatsappNumber = '554396728578';  // Número do whatsapp original mantido
     const form = document.getElementById('confirmForm');
 
     form.addEventListener('submit', function(event) {
@@ -558,16 +537,9 @@ body {
         window.open(url, '_blank');
     });
 
-    // Pré-carregar o IndexedDB para evitar delay na primeira abertura do modal
-    openIndexedDB().then(() => {
-        console.log('✅ IndexedDB pronto para exibir presentes');
-        // Opcional: já carrega os gifts em background para cache
-        getAllGifts().catch(e => console.warn);
-    }).catch(err => console.warn('⚠️ Erro ao abrir IndexedDB (pode ser privacidade)', err));
-
-    // Se as imagens das flores não existirem, não quebrar layout
+    // Se as imagens das flores não existirem, não quebrar o layout
     document.querySelectorAll('.floral img').forEach(img => {
-        img.onerror = () => { img.style.display = 'none'; };
+        img.onerror = function() { this.style.display = 'none'; };
     });
 </script>
 </body>
