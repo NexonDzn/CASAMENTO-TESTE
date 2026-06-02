@@ -813,7 +813,7 @@
                     <div class="gift-input input-group"><i class="fa-solid fa-tag"></i><input type="text" id="presenteNome" placeholder="Nome do presente (ex: Jogo de taças)"></div>
                     <button class="btn btn-primary" id="btnSalvarPresente"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
                 </div>
-                <p style="margin-top: 16px; font-size: 0.75rem; color:#8a9a78;"><i class="fa-regular fa-circle-info"></i> Fotos salvas localmente e sincronizadas na nuvem.</p>
+                <p style="margin-top: 16px; font-size: 0.75rem; color:#8a9a78;"><i class="fa-regular fa-circle-info"></i> Fotos salvas diretamente na nuvem para aparecer em todos os celulares.</p>
             </div>
         </div>
         <div class="card">
@@ -829,77 +829,564 @@
 <div class="sync-badge" id="syncStatus">🔄 Sincronizando...</div>
 
 <script>
-    // Função de escape
+    // ============================================================
+    // PAINEL ADMIN 100% NA NUVEM
+    // Sem IndexedDB. Presentes e convidados ficam no GitHub Gist
+    // através da rota /api/gist da Vercel.
+    // ============================================================
+
+    const API_URL = '/api/gist';
+
+    let appData = {
+        guests: [],
+        gifts: []
+    };
+
+    let currentFilter = 'todos';
+    let searchTerm = '';
+    let selectedImageDataUrl = null;
+    let isSaving = false;
+
+    const toastEl = document.getElementById('toast');
+    const syncStatusEl = document.getElementById('syncStatus');
+    const fotoInput = document.getElementById('presenteFotoInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const btnSalvarPresente = document.getElementById('btnSalvarPresente');
+
+    // ====================== UTILITÁRIOS ======================
     function escapeHTML(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
             if (m === '&') return '&amp;';
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
+            if (m === '"') return '&quot;';
+            if (m === "'") return '&#039;';
             return m;
         });
     }
 
-    // API local
-    const API_URL = '/api/gist';
-    let isSyncing = false;
-    let lastSyncHash = '';
+    function showToast(msg) {
+        clearTimeout(window.__toastTimer);
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        window.__toastTimer = setTimeout(() => {
+            toastEl.classList.remove('show');
+        }, 3000);
+    }
+    window.showToast = showToast;
 
-    async function getCurrentDataHash() {
-        const gifts = await getAllGifts();
-        const data = { guests: guests, gifts: gifts.map(g => ({ name: g.name, imageDataUrl: g.imageDataUrl, createdAt: g.createdAt })) };
-        let hash = 0;
-        const str = JSON.stringify(data);
-        for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
-        return hash.toString();
+    function setSyncStatus(text) {
+        if (syncStatusEl) syncStatusEl.innerHTML = text;
     }
 
-    async function testGistConnection() { showToast('🔍 Testando API...'); try { const r = await fetch(API_URL); if(r.ok) showToast('✅ Conexão com GitHub ativa'); else throw new Error(); } catch(e) { showToast('❌ Erro na comunicação'); } }
+    function normalizeData(data) {
+        const guests = Array.isArray(data?.guests) ? data.guests : [];
+        const rawGifts = Array.isArray(data?.gifts)
+            ? data.gifts
+            : (Array.isArray(data?.presentes) ? data.presentes : []);
 
-    async function loadDataFromGist() { try { const res = await fetch(API_URL); if(!res.ok) return null; return await res.json(); } catch(e) { return null; } }
-    async function saveDataToGist(data, silent=false) { if(isSyncing) return false; isSyncing=true; try { const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) }); if(res.ok){ if(!silent) showToast('✅ Salvou na nuvem'); document.getElementById('syncStatus').innerHTML = '✅ Sincronizado'; setTimeout(()=>{ if(document.getElementById('syncStatus').innerHTML === '✅ Sincronizado') document.getElementById('syncStatus').innerHTML = '☁️ Nuvem ativa'; },2000); return true; } else throw new Error(); } catch(e){ if(!silent) showToast('❌ Erro ao salvar'); document.getElementById('syncStatus').innerHTML = '⚠️ Erro'; return false; } finally { isSyncing=false; } }
+        const gifts = rawGifts.map((gift, index) => ({
+            id: gift.id || gift.createdAt || `${Date.now()}-${index}`,
+            name: gift.name || gift.nome || 'Presente',
+            imageDataUrl: gift.imageDataUrl || gift.image || gift.foto || '',
+            createdAt: gift.createdAt || Date.now()
+        }));
 
-    async function syncLocalToGist() { if(isSyncing) return; const gifts = await getAllGifts(); const currentHash = await getCurrentDataHash(); if(currentHash === lastSyncHash) return; lastSyncHash = currentHash; await saveDataToGist({ guests, gifts: gifts.map(g=>({ name:g.name, imageDataUrl:g.imageDataUrl, createdAt:g.createdAt })) }, false); }
-    async function loadFromGistAndUpdate() { if(isSyncing) return; isSyncing=true; const data = await loadDataFromGist(); if(!data) { isSyncing=false; return; } try { let changed=false; if(data.guests && JSON.stringify(guests)!==JSON.stringify(data.guests)) { guests = data.guests; saveGuestsToLocal(guests); renderTableConvidados(); changed=true; } if(data.gifts && Array.isArray(data.gifts)) { const currentGifts = await getAllGifts(); const currentSimple = currentGifts.map(g=>({name:g.name, imageDataUrl:g.imageDataUrl})); const newSimple = data.gifts.map(g=>({name:g.name, imageDataUrl:g.imageDataUrl})); if(JSON.stringify(currentSimple)!==JSON.stringify(newSimple)) { await clearAllGiftsFromDB(); for(const gift of data.gifts) await addGiftToDB({ name:gift.name, imageDataUrl:gift.imageDataUrl, createdAt:gift.createdAt||Date.now() }); await renderGifts(); changed=true; } } if(changed) { showToast('🔄 Sincronizado da nuvem'); lastSyncHash = await getCurrentDataHash(); } } catch(e){} finally { isSyncing=false; } }
+        return { guests, gifts };
+    }
 
-    // INDEXEDDB
-    const DB_NAME = 'WeddingGiftsDB', STORE_NAME = 'gifts'; let db = null;
-    function openIndexedDB() { return new Promise((resolve,reject)=>{ const req = indexedDB.open(DB_NAME,1); req.onerror=()=>reject(req.error); req.onsuccess=()=>{ db=req.result; resolve(db); }; req.onupgradeneeded=(e)=>{ const dbRef=e.target.result; if(!dbRef.objectStoreNames.contains(STORE_NAME)) dbRef.createObjectStore(STORE_NAME,{keyPath:'id',autoIncrement:true}); }; }); }
-    async function addGiftToDB(gift) { if(!db) await openIndexedDB(); return new Promise((resolve,reject)=>{ const tx = db.transaction(STORE_NAME,'readwrite'), store=tx.objectStore(STORE_NAME), req=store.add(gift); req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); }
-    async function getAllGifts() { if(!db) await openIndexedDB(); return new Promise((resolve,reject)=>{ const tx = db.transaction(STORE_NAME,'readonly'), store=tx.objectStore(STORE_NAME), req=store.getAll(); req.onsuccess=()=>resolve(req.result||[]); req.onerror=()=>reject(req.error); }); }
-    async function deleteGiftFromDB(id) { if(!db) await openIndexedDB(); return new Promise((resolve,reject)=>{ const tx = db.transaction(STORE_NAME,'readwrite'), store=tx.objectStore(STORE_NAME), req=store.delete(id); req.onsuccess=()=>resolve(); req.onerror=()=>reject(req.error); }); }
-    async function clearAllGiftsFromDB() { if(!db) await openIndexedDB(); return new Promise((resolve,reject)=>{ const tx = db.transaction(STORE_NAME,'readwrite'), store=tx.objectStore(STORE_NAME), req=store.clear(); req.onsuccess=()=>resolve(); req.onerror=()=>reject(req.error); }); }
+    // ====================== API GIST / NUVEM ======================
+    async function fetchCloudData() {
+        const response = await fetch(`${API_URL}?t=${Date.now()}`, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
 
-    async function renderGifts() { const container = document.getElementById('giftsListContainer'); if(!container) return; try { const gifts = await getAllGifts(); if(!gifts.length) { container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-gift fa-2x"></i><p>Nenhum presente adicionado ainda</p></div>`; return; } container.innerHTML = gifts.map(gift => `<div class="gift-card" data-id="${gift.id}"><img class="gift-img" src="${gift.imageDataUrl}" alt="${escapeHTML(gift.name)}" onerror="this.src='https://placehold.co/300x300?text=Foto'"><div class="gift-info"><div class="gift-name">${escapeHTML(gift.name)}</div><button class="action-btn delete-btn delete-gift" data-id="${gift.id}"><i class="fa-solid fa-trash-can"></i></button></div></div>`).join(''); document.querySelectorAll('.delete-gift').forEach(btn => { btn.addEventListener('click', async (e) => { e.stopPropagation(); const id = Number(btn.getAttribute('data-id')); if(confirm('Remover este presente?')){ await deleteGiftFromDB(id); showToast('Presente removido'); await renderGifts(); await syncLocalToGist(); } }); }); } catch(err) { container.innerHTML='<div class="empty-state">Erro ao carregar</div>'; } }
+        if (!response.ok) {
+            const text = await response.text().catch(() => '');
+            throw new Error(`Erro ao buscar dados: ${response.status} ${text}`);
+        }
 
-    // Preview de imagem
-    const fotoInput = document.getElementById('presenteFotoInput'); const previewContainer = document.getElementById('previewContainer'); let selectedImageDataUrl = null;
-    fotoInput.addEventListener('change', (event) => { const file = event.target.files[0]; if(file && file.type.startsWith('image/')){ const reader = new FileReader(); reader.onload = (e) => { selectedImageDataUrl = e.target.result; previewContainer.innerHTML = `<img src="${selectedImageDataUrl}" style="width:100%; height:100%; object-fit:cover;">`; }; reader.readAsDataURL(file); } else if(file) { showToast('Selecione uma imagem válida'); fotoInput.value=''; } });
-    document.getElementById('btnSalvarPresente').addEventListener('click', async () => { const nome = document.getElementById('presenteNome').value.trim(); if(!nome) { showToast('Digite o nome do presente'); return; } if(!selectedImageDataUrl) { showToast('Escolha uma foto'); return; } await addGiftToDB({ name: nome, imageDataUrl: selectedImageDataUrl, createdAt: Date.now() }); showToast(`"${nome}" adicionado!`); document.getElementById('presenteNome').value=''; selectedImageDataUrl=null; previewContainer.innerHTML='<i class="fa-regular fa-image" style="color:#b9b28a; font-size: 2rem;"></i>'; fotoInput.value=''; await renderGifts(); await syncLocalToGist(); });
+        const data = await response.json();
+        return normalizeData(data);
+    }
 
-    // CONVIDADOS
-    const STORAGE_KEY = 'casamento_guests_admin'; let guests = []; let currentFilter='todos', searchTerm='';
-    function getDefaultGuests() { return [ { id:1, name:'Ana Clara Souza', status:'pendente' }, { id:2, name:'Bruno Mendes', status:'confirmada' }, { id:3, name:'Carla Ribeiro', status:'pendente' }, { id:4, name:'Daniel Oliveira', status:'cancelada' }, { id:5, name:'Elisa Castro', status:'confirmada' }, { id:6, name:'Felipe Nogueira', status:'pendente' } ]; }
-    function loadGuestsFromLocal() { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : getDefaultGuests(); }
-    function saveGuestsToLocal(g) { localStorage.setItem(STORAGE_KEY,JSON.stringify(g)); }
-    guests = loadGuestsFromLocal();
+    async function saveCloudData(data) {
+        const payload = normalizeData(data);
 
-    function getFilteredGuests() { let filtered = [...guests]; if(currentFilter!=='todos') filtered = filtered.filter(g=>g.status===currentFilter); if(searchTerm.trim()) filtered = filtered.filter(g=>g.name.toLowerCase().includes(searchTerm.trim().toLowerCase())); return filtered; }
-    function updateStats() { document.getElementById('statTotal').textContent=guests.length; document.getElementById('statPending').textContent=guests.filter(g=>g.status==='pendente').length; document.getElementById('statConfirmed').textContent=guests.filter(g=>g.status==='confirmada').length; document.getElementById('statCancelled').textContent=guests.filter(g=>g.status==='cancelada').length; }
-    function renderTableConvidados() { const filtered = getFilteredGuests(); const tbody = document.getElementById('guestsTableBody'), emptyDiv = document.getElementById('emptyState'); if(!filtered.length){ tbody.innerHTML=''; emptyDiv.style.display='block'; updateStats(); return; } emptyDiv.style.display='none'; tbody.innerHTML = filtered.map(guest=>{ const initials = guest.name.split(' ').map(w=>w.charAt(0).toUpperCase()).slice(0,2).join(''); let badgeClass='', badgeText=''; if(guest.status==='pendente'){ badgeClass='badge-pending'; badgeText='Pendente'; } else if(guest.status==='confirmada'){ badgeClass='badge-confirmed'; badgeText='Confirmada'; } else { badgeClass='badge-cancelled'; badgeText='Cancelada'; } return `<tr data-id="${guest.id}"><td><div class="guest-name"><div class="avatar">${escapeHTML(initials)}</div><span>${escapeHTML(guest.name)}</span></div></td><td><span class="badge ${badgeClass}">${badgeText}</span></td><td><div class="action-buttons"><button class="action-btn pending-btn" onclick="window._setStatus(${guest.id},'pendente')" title="Pendente"><i class="fa-regular fa-clock"></i></button><button class="action-btn confirm-btn" onclick="window._setStatus(${guest.id},'confirmada')" title="Confirmar"><i class="fa-regular fa-circle-check"></i></button><button class="action-btn cancel-btn" onclick="window._setStatus(${guest.id},'cancelada')" title="Cancelar"><i class="fa-regular fa-circle-xmark"></i></button><button class="action-btn delete-btn" onclick="window._deleteGuest(${guest.id})" title="Remover"><i class="fa-regular fa-trash-can"></i></button></div></td></tr>`; }).join(''); updateStats(); }
-    window._setStatus = async (id,newStatus) => { const guest = guests.find(g=>g.id===id); if(guest && guest.status!==newStatus){ guest.status=newStatus; saveGuestsToLocal(guests); renderTableConvidados(); showToast(`Status alterado: ${guest.name}`); await syncLocalToGist(); } };
-    window._deleteGuest = async (id) => { const guest = guests.find(g=>g.id===id); if(guest && confirm(`Remover "${guest.name}"?`)){ guests = guests.filter(g=>g.id!==id); saveGuestsToLocal(guests); renderTableConvidados(); showToast(`"${guest.name}" removido`); await syncLocalToGist(); } };
-    document.getElementById('addGuestForm').addEventListener('submit', async (e)=>{ e.preventDefault(); const name = document.getElementById('newGuestName').value.trim(); if(!name) { showToast('Digite um nome'); return; } if(guests.some(g=>g.name.toLowerCase()===name.toLowerCase())){ showToast('Convidado já existe'); return; } guests.push({ id: Date.now(), name, status:'pendente' }); saveGuestsToLocal(guests); renderTableConvidados(); document.getElementById('newGuestName').value=''; showToast(`"${name}" adicionado`); await syncLocalToGist(); });
-    document.getElementById('searchInput').addEventListener('input', (e)=>{ searchTerm=e.target.value; renderTableConvidados(); });
-    document.getElementById('filterButtons').addEventListener('click', (e)=>{ const btn=e.target.closest('.filter-chip'); if(!btn) return; document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentFilter=btn.dataset.filter; renderTableConvidados(); });
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            cache: 'no-store',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-    // Abas
-    document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ const tabId = btn.dataset.tab; document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active-tab')); document.getElementById(tabId).classList.add('active-tab'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(tabId==='presentestab') renderGifts(); }); });
+        if (!response.ok) {
+            const text = await response.text().catch(() => '');
+            throw new Error(`Erro ao salvar dados: ${response.status} ${text}`);
+        }
 
-    // Inicialização
-    (async function init(){ await openIndexedDB(); await loadFromGistAndUpdate(); await syncLocalToGist(); renderTableConvidados(); await renderGifts(); lastSyncHash = await getCurrentDataHash(); setInterval(async()=>{ await loadFromGistAndUpdate(); }, 30000); })();
+        return true;
+    }
 
-    const toastEl = document.getElementById('toast'); let toastTimer; function showToast(msg){ clearTimeout(toastTimer); toastEl.textContent=msg; toastEl.classList.add('show'); toastTimer=setTimeout(()=>toastEl.classList.remove('show'),3000); } window.showToast=showToast;
+    async function loadFromCloudAndRender(silent = false) {
+        try {
+            if (!silent) setSyncStatus('🔄 Carregando nuvem...');
+
+            appData = await fetchCloudData();
+
+            renderTableConvidados();
+            renderGifts();
+
+            setSyncStatus('☁️ Nuvem ativa');
+            return true;
+        } catch (err) {
+            console.error(err);
+            setSyncStatus('⚠️ Erro na nuvem');
+            if (!silent) showToast('❌ Erro ao carregar da nuvem');
+            return false;
+        }
+    }
+
+    async function testGistConnection() {
+        showToast('🔍 Testando API...');
+        try {
+            await fetchCloudData();
+            showToast('✅ Conexão com GitHub ativa');
+            setSyncStatus('☁️ Nuvem ativa');
+        } catch (err) {
+            console.error(err);
+            showToast('❌ Erro na comunicação');
+            setSyncStatus('⚠️ Erro');
+        }
+    }
+
+    // ====================== PRESENTES ======================
+    function resetGiftForm() {
+        document.getElementById('presenteNome').value = '';
+        selectedImageDataUrl = null;
+        previewContainer.innerHTML = '<i class="fa-regular fa-image" style="color:#b9b28a; font-size: 2rem;"></i>';
+        fotoInput.value = '';
+    }
+
+    function fileToCompressedDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onerror = () => reject(new Error('Erro ao ler imagem'));
+
+            reader.onload = () => {
+                const originalDataUrl = reader.result;
+                const img = new Image();
+
+                img.onerror = () => {
+                    // Se não conseguir comprimir, usa a imagem original.
+                    resolve(originalDataUrl);
+                };
+
+                img.onload = () => {
+                    try {
+                        const maxSize = 900;
+                        const ratio = Math.min(
+                            1,
+                            maxSize / img.width,
+                            maxSize / img.height
+                        );
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, Math.round(img.width * ratio));
+                        canvas.height = Math.max(1, Math.round(img.height * ratio));
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        // JPEG reduz bastante o tamanho para não estourar limite da API/Gist.
+                        const compressed = canvas.toDataURL('image/jpeg', 0.78);
+                        resolve(compressed);
+                    } catch (e) {
+                        resolve(originalDataUrl);
+                    }
+                };
+
+                img.src = originalDataUrl;
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
+    fotoInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            showToast('Selecione uma imagem válida');
+            fotoInput.value = '';
+            return;
+        }
+
+        try {
+            setSyncStatus('🖼️ Preparando imagem...');
+            selectedImageDataUrl = await fileToCompressedDataURL(file);
+            previewContainer.innerHTML = `<img src="${selectedImageDataUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+            setSyncStatus('☁️ Nuvem ativa');
+        } catch (err) {
+            console.error(err);
+            showToast('❌ Erro ao preparar imagem');
+            setSyncStatus('⚠️ Erro');
+        }
+    });
+
+    btnSalvarPresente.addEventListener('click', async () => {
+        const nome = document.getElementById('presenteNome').value.trim();
+
+        if (!nome) {
+            showToast('Digite o nome do presente');
+            return;
+        }
+
+        if (!selectedImageDataUrl) {
+            showToast('Escolha uma foto');
+            return;
+        }
+
+        if (isSaving) return;
+
+        isSaving = true;
+        btnSalvarPresente.disabled = true;
+        setSyncStatus('💾 Salvando na nuvem...');
+
+        try {
+            const latestData = await fetchCloudData();
+
+            const novoPresente = {
+                id: Date.now(),
+                name: nome,
+                imageDataUrl: selectedImageDataUrl,
+                createdAt: Date.now()
+            };
+
+            latestData.gifts.push(novoPresente);
+
+            await saveCloudData(latestData);
+
+            appData = latestData;
+            renderGifts();
+            resetGiftForm();
+
+            showToast(`✅ "${nome}" salvo na nuvem`);
+            setSyncStatus('✅ Sincronizado');
+
+            setTimeout(() => {
+                setSyncStatus('☁️ Nuvem ativa');
+            }, 1800);
+        } catch (err) {
+            console.error(err);
+            showToast('❌ Erro ao salvar presente');
+            setSyncStatus('⚠️ Erro ao salvar');
+        } finally {
+            isSaving = false;
+            btnSalvarPresente.disabled = false;
+        }
+    });
+
+    async function deleteGiftFromCloud(id) {
+        if (!confirm('Remover este presente?')) return;
+
+        try {
+            setSyncStatus('🗑️ Removendo...');
+            const latestData = await fetchCloudData();
+
+            latestData.gifts = latestData.gifts.filter(gift => String(gift.id) !== String(id));
+
+            await saveCloudData(latestData);
+
+            appData = latestData;
+            renderGifts();
+
+            showToast('✅ Presente removido');
+            setSyncStatus('☁️ Nuvem ativa');
+        } catch (err) {
+            console.error(err);
+            showToast('❌ Erro ao remover presente');
+            setSyncStatus('⚠️ Erro');
+        }
+    }
+
+    function renderGifts() {
+        const container = document.getElementById('giftsListContainer');
+        if (!container) return;
+
+        const gifts = appData.gifts || [];
+
+        if (!gifts.length) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-regular fa-gift fa-2x"></i>
+                    <p>Nenhum presente adicionado ainda</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = gifts.map(gift => `
+            <div class="gift-card" data-id="${escapeHTML(gift.id)}">
+                <img
+                    class="gift-img"
+                    src="${escapeHTML(gift.imageDataUrl)}"
+                    alt="${escapeHTML(gift.name)}"
+                    onerror="this.src='https://placehold.co/300x300?text=Foto'">
+                <div class="gift-info">
+                    <div class="gift-name">${escapeHTML(gift.name)}</div>
+                    <button
+                        class="action-btn delete-btn delete-gift"
+                        data-id="${escapeHTML(gift.id)}"
+                        title="Remover">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('giftsListContainer').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.delete-gift');
+        if (!btn) return;
+
+        const id = btn.getAttribute('data-id');
+        await deleteGiftFromCloud(id);
+    });
+
+    // ====================== CONVIDADOS ======================
+    function getFilteredGuests() {
+        let filtered = [...(appData.guests || [])];
+
+        if (currentFilter !== 'todos') {
+            filtered = filtered.filter(g => g.status === currentFilter);
+        }
+
+        if (searchTerm.trim()) {
+            filtered = filtered.filter(g =>
+                String(g.name || '').toLowerCase().includes(searchTerm.trim().toLowerCase())
+            );
+        }
+
+        return filtered;
+    }
+
+    function updateStats() {
+        const guests = appData.guests || [];
+
+        document.getElementById('statTotal').textContent = guests.length;
+        document.getElementById('statPending').textContent = guests.filter(g => g.status === 'pendente').length;
+        document.getElementById('statConfirmed').textContent = guests.filter(g => g.status === 'confirmada').length;
+        document.getElementById('statCancelled').textContent = guests.filter(g => g.status === 'cancelada').length;
+    }
+
+    function renderTableConvidados() {
+        const filtered = getFilteredGuests();
+        const tbody = document.getElementById('guestsTableBody');
+        const emptyDiv = document.getElementById('emptyState');
+
+        if (!filtered.length) {
+            tbody.innerHTML = '';
+            emptyDiv.style.display = 'block';
+            updateStats();
+            return;
+        }
+
+        emptyDiv.style.display = 'none';
+
+        tbody.innerHTML = filtered.map(guest => {
+            const name = guest.name || '';
+            const initials = name
+                .split(' ')
+                .filter(Boolean)
+                .map(w => w.charAt(0).toUpperCase())
+                .slice(0, 2)
+                .join('');
+
+            let badgeClass = 'badge-pending';
+            let badgeText = 'Pendente';
+
+            if (guest.status === 'confirmada') {
+                badgeClass = 'badge-confirmed';
+                badgeText = 'Confirmada';
+            } else if (guest.status === 'cancelada') {
+                badgeClass = 'badge-cancelled';
+                badgeText = 'Cancelada';
+            }
+
+            return `
+                <tr data-id="${escapeHTML(guest.id)}">
+                    <td>
+                        <div class="guest-name">
+                            <div class="avatar">${escapeHTML(initials || '?')}</div>
+                            <span>${escapeHTML(name)}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn pending-btn guest-action" data-action="status" data-status="pendente" data-id="${escapeHTML(guest.id)}" title="Pendente">
+                                <i class="fa-regular fa-clock"></i>
+                            </button>
+                            <button class="action-btn confirm-btn guest-action" data-action="status" data-status="confirmada" data-id="${escapeHTML(guest.id)}" title="Confirmar">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </button>
+                            <button class="action-btn cancel-btn guest-action" data-action="status" data-status="cancelada" data-id="${escapeHTML(guest.id)}" title="Cancelar">
+                                <i class="fa-regular fa-circle-xmark"></i>
+                            </button>
+                            <button class="action-btn delete-btn guest-action" data-action="delete" data-id="${escapeHTML(guest.id)}" title="Remover">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        updateStats();
+    }
+
+    async function saveGuestChange(updateFn, successMessage) {
+        if (isSaving) return;
+
+        isSaving = true;
+        setSyncStatus('💾 Salvando na nuvem...');
+
+        try {
+            const latestData = await fetchCloudData();
+
+            updateFn(latestData);
+
+            await saveCloudData(latestData);
+
+            appData = latestData;
+            renderTableConvidados();
+
+            showToast(successMessage || '✅ Salvo na nuvem');
+            setSyncStatus('☁️ Nuvem ativa');
+        } catch (err) {
+            console.error(err);
+            showToast('❌ Erro ao salvar convidado');
+            setSyncStatus('⚠️ Erro');
+        } finally {
+            isSaving = false;
+        }
+    }
+
+    document.getElementById('addGuestForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const input = document.getElementById('newGuestName');
+        const name = input.value.trim();
+
+        if (!name) {
+            showToast('Digite um nome');
+            return;
+        }
+
+        await saveGuestChange((data) => {
+            if (data.guests.some(g => String(g.name || '').toLowerCase() === name.toLowerCase())) {
+                throw new Error('Convidado já existe');
+            }
+
+            data.guests.push({
+                id: Date.now(),
+                name,
+                status: 'pendente',
+                createdAt: Date.now()
+            });
+
+            input.value = '';
+        }, `✅ "${name}" adicionado`);
+    });
+
+    document.getElementById('guestsTableBody').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.guest-action');
+        if (!btn) return;
+
+        const id = btn.getAttribute('data-id');
+        const action = btn.getAttribute('data-action');
+
+        if (action === 'delete') {
+            const guest = (appData.guests || []).find(g => String(g.id) === String(id));
+            const name = guest?.name || 'convidado';
+
+            if (!confirm(`Remover "${name}"?`)) return;
+
+            await saveGuestChange((data) => {
+                data.guests = data.guests.filter(g => String(g.id) !== String(id));
+            }, `✅ "${name}" removido`);
+
+            return;
+        }
+
+        if (action === 'status') {
+            const newStatus = btn.getAttribute('data-status');
+
+            await saveGuestChange((data) => {
+                const guest = data.guests.find(g => String(g.id) === String(id));
+                if (guest) guest.status = newStatus;
+            }, '✅ Status alterado');
+        }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchTerm = e.target.value;
+        renderTableConvidados();
+    });
+
+    document.getElementById('filterButtons').addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-chip');
+        if (!btn) return;
+
+        document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        currentFilter = btn.dataset.filter;
+        renderTableConvidados();
+    });
+
+    // ====================== ABAS ======================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-tab'));
+            document.getElementById(tabId).classList.add('active-tab');
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (tabId === 'presentestab') {
+                renderGifts();
+            }
+        });
+    });
+
+    // ====================== INICIALIZAÇÃO ======================
+    (async function init() {
+        await loadFromCloudAndRender();
+
+        // Atualiza automaticamente para manter o painel alinhado com a nuvem.
+        setInterval(async () => {
+            if (!isSaving) {
+                await loadFromCloudAndRender(true);
+            }
+        }, 30000);
+    })();
+
     document.getElementById('testGistBtn').addEventListener('click', testGistConnection);
 </script>
 </body>
