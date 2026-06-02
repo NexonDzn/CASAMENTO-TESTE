@@ -1,0 +1,32 @@
+INSTRUÇÕES IMPORTANTES
+
+1. Suba a pasta api/gist.js exatamente assim no GitHub:
+   /api/gist.js
+
+2. Suba o index.html na raiz do projeto.
+
+3. Use a página pública de confirmação com o nome que seu site já usa:
+   - confirmação.html   (com acento)
+   - confirmacao.html   (sem acento)
+   - confirmar.html
+
+   Os 3 arquivos estão iguais. Isso evita erro de link por causa do acento no nome.
+
+4. Depois do deploy na Vercel, teste no navegador:
+   https://SEU-SITE.vercel.app/api/gist?debug=1
+
+   Se funcionar, deve aparecer algo como:
+   ok: true
+   giftsCount: número de presentes
+   data: { guests: [...], gifts: [...] }
+
+5. Se giftsCount for 0, o presente não foi salvo no Gist.
+   Abra o painel admin, adicione um presente e espere aparecer "salvo na nuvem".
+
+6. Esta versão não usa IndexedDB para presentes.
+   Os presentes são salvos direto no GitHub Gist.
+
+7. Esta versão corrige um problema comum:
+   quando o wedding-data.json fica grande por causa das fotos em base64,
+   a API do GitHub pode devolver o conteúdo truncado. Agora o api/gist.js
+   lê pelo raw_url quando isso acontecer.
