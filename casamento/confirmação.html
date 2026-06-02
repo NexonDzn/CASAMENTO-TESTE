@@ -439,9 +439,24 @@ body {
 </div>
 
 <script>
+    const API_URL = '/api/gist';
+
     const modal = document.getElementById('giftsModal');
     const openBtn = document.getElementById('openGiftsModalBtn');
     const closeBtn = document.getElementById('closeModalBtn');
+
+    // ====================== UTILITÁRIOS ======================
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            if (m === '"') return '&quot;';
+            if (m === "'") return '&#039;';
+            return m;
+        });
+    }
 
     // ====================== CONTROLE DO MODAL ======================
     openBtn.addEventListener('click', (e) => {
@@ -450,6 +465,7 @@ body {
     });
 
     closeBtn.addEventListener('click', closeModal);
+
     window.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
@@ -458,154 +474,114 @@ body {
         modal.style.display = 'none';
     }
 
-    // ====================== BUSCA DOS PRESENTES NA NUVEM ======================
     async function openModalAndLoadGifts() {
-        // Mostra o modal e exibe animação de carregamento
         modal.style.display = 'flex';
+
         const contentDiv = document.getElementById('modalGiftsContent');
         if (contentDiv) {
-            contentDiv.innerHTML = `<div class="loading-spinner"><i class="fa-regular fa-heart fa-pulse"></i> Carregando presentes da nuvem...</div>`;
+            contentDiv.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fa-regular fa-heart fa-pulse"></i>
+                    Carregando presentes da nuvem...
+                </div>
+            `;
         }
 
-        // Busca os presentes salvos na API do Gist
         await renderGiftsIntoModal();
     }
 
-    // Evita erro caso o projeto antigo não tenha a função openIndexedDB nesta página
-    function hasIndexedDBFallback() {
-        return typeof openIndexedDB === 'function';
-    }
-
-    function escapeHTML(value) {
-        return String(value || '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
-
-    async function getAllGifts() {
+    // ====================== BUSCA DOS PRESENTES NA NUVEM ======================
+    async function loadGiftsFromAPI() {
         try {
-            // Busca os presentes em tempo real diretamente da sua API na Vercel
-            const response = await fetch('/api/gist', {
+            const response = await fetch(`${API_URL}?t=${Date.now()}`, {
                 method: 'GET',
-                cache: 'no-store'
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json'
+                }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-
-                // Garante compatibilidade caso a chave salva seja 'gifts' ou 'presentes'
-                const listaPresentes = data.gifts || data.presentes || [];
-                console.log('🎁 Presentes carregados da nuvem com sucesso:', listaPresentes);
-                return Array.isArray(listaPresentes) ? listaPresentes : [];
+            if (!response.ok) {
+                throw new Error(`Erro API: ${response.status}`);
             }
 
-            console.warn('⚠️ API respondeu com erro:', response.status, response.statusText);
+            const data = await response.json();
+
+            const gifts = Array.isArray(data.gifts)
+                ? data.gifts
+                : (Array.isArray(data.presentes) ? data.presentes : []);
+
+            return gifts.map((gift, index) => ({
+                id: gift.id || gift.createdAt || index,
+                name: gift.name || gift.nome || 'Presente',
+                imageDataUrl: gift.imageDataUrl || gift.image || gift.foto || ''
+            }));
+
         } catch (error) {
-            console.error('Erro ao buscar presentes da nuvem Vercel:', error);
+            console.error('Erro ao buscar presentes da API:', error);
+            return [];
         }
-
-        // Plano B: Se a internet/API falhar, tenta ler do banco local antigo por segurança
-        return new Promise((resolve) => {
-            try {
-                if (!hasIndexedDBFallback()) {
-                    resolve([]);
-                    return;
-                }
-
-                openIndexedDB().then(db => {
-                    const nomeStore = db.objectStoreNames.contains('gifts') ? 'gifts' : 'presentes';
-
-                    if (!db.objectStoreNames.contains(nomeStore)) {
-                        resolve([]);
-                        return;
-                    }
-
-                    const tx = db.transaction(nomeStore, 'readonly');
-                    const store = tx.objectStore(nomeStore);
-                    const req = store.getAll();
-
-                    req.onsuccess = () => resolve(req.result || []);
-                    req.onerror = () => resolve([]);
-                }).catch(() => resolve([]));
-            } catch(e) {
-                resolve([]);
-            }
-        });
     }
 
     async function renderGiftsIntoModal() {
         const contentDiv = document.getElementById('modalGiftsContent');
+        const gifts = await loadGiftsFromAPI();
 
-        // Busca primeiro da nuvem e usa o banco local antigo só como segurança
-        const gifts = await getAllGifts();
-
-        if (!gifts || gifts.length === 0) {
+        if (!gifts.length) {
             contentDiv.innerHTML = `
                 <div class="empty-gifts-modal">
                     <i class="fa-solid fa-box-open"></i>
                     <p>Nenhum presente na lista no momento.</p>
-                </div>`;
+                </div>
+            `;
             return;
         }
 
-        contentDiv.innerHTML = '';
-        gifts.forEach(gift => {
-            const card = document.createElement('div');
-            card.className = 'gift-card';
-
-            // Aceita os nomes de campos mais comuns usados no painel/admin
-            const giftName = gift.name || gift.nome || gift.title || gift.titulo || 'Presente';
-            const imgSrc = gift.imageDataUrl || gift.imagem || gift.image || gift.foto || 'https://via.placeholder.com/150?text=Sem+Foto';
-
-            card.innerHTML = `
-                <img src="${escapeHTML(imgSrc)}" alt="${escapeHTML(giftName)}" class="gift-img">
+        contentDiv.innerHTML = gifts.map(gift => `
+            <div class="gift-card">
+                <img
+                    src="${escapeHTML(gift.imageDataUrl || 'https://placehold.co/300x300?text=Sem+Foto')}"
+                    alt="${escapeHTML(gift.name)}"
+                    class="gift-img"
+                    onerror="this.src='https://placehold.co/300x300?text=Sem+Foto'">
                 <div class="gift-info">
-                    <h3 class="gift-title">${escapeHTML(giftName)}</h3>
+                    <h3 class="gift-title">${escapeHTML(gift.name)}</h3>
                 </div>
-            `;
-            contentDiv.appendChild(card);
-        });
+            </div>
+        `).join('');
     }
 
-    // Pré-carregar os dados para evitar delay na primeira abertura do modal
-    if (hasIndexedDBFallback()) {
-        openIndexedDB().then(async () => {
-            console.log('✅ Banco local verificado. Puxando presentes atualizados...');
-            try {
-                // Força a chamada da nova função para testar o carregamento assim que a página abre
-                await getAllGifts();
-            } catch(e) {
-                console.warn(e);
-            }
-        }).catch(err => console.warn('⚠️ Aviso sobre o banco local:', err));
-    } else {
-        // Mesmo sem banco local, já testa a nuvem quando a página abre
-        getAllGifts().catch(err => console.warn('⚠️ Aviso ao pré-carregar presentes:', err));
-    }
+    // Pré-carrega a lista para a primeira abertura ser mais rápida.
+    loadGiftsFromAPI().then(gifts => {
+        console.log('🎁 Presentes carregados da nuvem:', gifts.length);
+    }).catch(console.warn);
 
     // ====================== CONFIRMAÇÃO POR WHATSAPP ======================
-    const whatsappNumber = '554396728578';  // Número do whatsapp original mantido
+    const whatsappNumber = '554396728578';
     const form = document.getElementById('confirmForm');
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
+
         const name = document.getElementById('guestName').value.trim();
-        const splitName = name.split(' ');
+        const splitName = name.split(/\s+/).filter(Boolean);
+
         if (splitName.length < 2) {
             alert('Por favor, digite nome e sobrenome completo.');
             return;
         }
+
         const message = `Olá! Meu nome é ${name} e estou confirmando presença no seu casamento 💍`;
         const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
         window.open(url, '_blank');
     });
 
     // Se as imagens das flores não existirem, não quebrar o layout
     document.querySelectorAll('.floral img').forEach(img => {
-        img.onerror = function() { this.style.display = 'none'; };
+        img.onerror = function() {
+            this.style.display = 'none';
+        };
     });
 </script>
 </body>
